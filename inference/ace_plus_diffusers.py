@@ -4,7 +4,7 @@ import random
 from collections import OrderedDict
 
 import torch, os
-from diffusers import FluxFillPipeline, FluxControlPipeline
+from diffusers import FluxFillPipeline
 from scepter.modules.utils.config import Config
 from scepter.modules.utils.distribute import we
 from scepter.modules.utils.file_system import FS
@@ -88,10 +88,11 @@ class ACEPlusDiffuserInference():
         if isinstance(prompt, str):
             prompt = [prompt]
         seed = seed if seed >= 0 else random.randint(0, 2 ** 32 - 1)
-        image, mask, out_h, out_w, slice_w = self.image_processor.preprocess(reference_image, edit_image, edit_mask)
+        image, mask, out_h, out_w, slice_w = self.image_processor.preprocess(reference_image, edit_image, edit_mask, repainting_scale = repainting_scale)
         h, w = image.shape[1:]
+        generator = torch.Generator("cpu").manual_seed(seed)
         masked_image_latents = self.prepare_input(image, mask,
-                                               batch_size=len(prompt) , height=h, width=w)
+                                               batch_size=len(prompt) , height=h, width=w, generator = generator)
 
         if lora_path is not None:
             with FS.get_from(lora_path) as local_path:
@@ -105,7 +106,7 @@ class ACEPlusDiffuserInference():
             guidance_scale=guide_scale,
             num_inference_steps=sample_steps,
             max_sequence_length=512,
-            generator=torch.Generator("cpu").manual_seed(seed),
+            generator=generator
         ).images[0]
         return self.image_processor.postprocess(image, slice_w, out_w, out_h), seed
 

@@ -9,6 +9,8 @@ from PIL import Image
 from scepter.modules.transform.io import pillow_convert
 from scepter.modules.utils.config import Config
 from scepter.modules.utils.file_system import FS
+
+from examples.examples import all_examples
 from inference.ace_plus_diffusers import ACEPlusDiffuserInference
 inference_dict = {
     "ACE_DIFFUSER_PLUS": ACEPlusDiffuserInference
@@ -37,8 +39,8 @@ def run_one_case(pipe,
                 sample_steps = None,
                 guide_scale = None,
                 repainting_scale = None,
-                model_path = None
-                ):
+                model_path = None,
+                **kwargs):
     if input_image is not None:
         input_image = Image.open(io.BytesIO(FS.get_object(input_image)))
         input_image = pillow_convert(input_image, "RGB")
@@ -60,7 +62,7 @@ def run_one_case(pipe,
         sample_steps=sample_steps or pipe.input.get("sample_steps", 28),
         guide_scale=guide_scale or pipe.input.get("guide_scale", 50),
         seed=seed,
-        repainting_scale=repainting_scale or pipe.input.get("repainting_scale", 0.0),
+        repainting_scale=repainting_scale or pipe.input.get("repainting_scale", 1.0),
         lora_path = model_path
     )
     with FS.put_to(save_path) as local_path:
@@ -142,7 +144,8 @@ def run():
 
     parser.add_argument('--infer_type',
                         dest='infer_type',
-                        choices=['native', 'diffusers'],
+                        choices=['diffusers'],
+                        default='diffusers',
                         help="Choose the inference scripts. 'native' refers to using the official implementation of ace++, "
                              "while 'diffusers' refers to using the adaptation for diffusers")
 
@@ -188,14 +191,18 @@ def run():
             "output_h": cfg.args.output_h,
             "output_w": cfg.args.output_w,
             "sample_steps": cfg.args.step,
-            "guide_scale": cfg.args.guide_scale,
-            "repainting_scale": cfg.args.repainting_scale
+            "guide_scale": cfg.args.guide_scale
         }
         # run examples
-        all_examples = [
-        ]
+
         for example in all_examples:
+            example["model_path"] = FS.get_from(task_model_dict[example["task_type"].upper()]["MODEL_PATH"])
             example.update(params)
+            if example["edit_type"] == "repainting":
+                example["repainting_scale"] = 1.0
+            else:
+                example["repainting_scale"] = task_model_dict[example["task_type"].upper()].get("REPAINTING_SCALE", 1.0)
+            print(example)
             local_path, seed = run_one_case(pipe, **example)
 
     else:
@@ -211,7 +218,7 @@ def run():
             "sample_steps": cfg.args.step,
             "guide_scale": cfg.args.guide_scale,
             "repainting_scale": cfg.args.repainting_scale,
-            "lora_path": FS.get_from(task_model_dict[cfg.args.task_type.upper()]["MODEL_PATH"])
+            "model_path": FS.get_from(task_model_dict[cfg.args.task_type.upper()]["MODEL_PATH"])
         }
         local_path, seed = run_one_case(pipe, **params)
         print(local_path, seed)

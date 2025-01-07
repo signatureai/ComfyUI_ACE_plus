@@ -24,12 +24,11 @@ if os.path.exists('__init__.py'):
     sys.modules[package_name] = package
     spec.loader.exec_module(package)
 
-from inference.ace_plus_inference import ACEPlusInference
 from inference.ace_plus_diffusers import ACEPlusDiffuserInference
 from inference.utils import edit_preprocess
+from examples.examples import all_examples
 
 inference_dict = {
-    "ACE_PLUS": ACEPlusInference,
     "ACE_DIFFUSER_PLUS": ACEPlusDiffuserInference
 }
 
@@ -91,6 +90,39 @@ class DemoUI(object):
                 preprocessor["REPAINTING_SCALE"] = task_model.get("REPAINTING_SCALE", 1.0)
                 self.edit_type_dict[preprocessor["TYPE"]] = preprocessor
         self.max_msgs = 20
+        # reformat examples
+        self.all_examples = [
+            [
+             one_example["task_type"], one_example["edit_type"], one_example["instruction"],
+             one_example["input_reference_image"], one_example["input_image"],
+             one_example["input_mask"], one_example["output_h"],
+             one_example["output_w"], one_example["seed"]
+             ]
+            for one_example in all_examples
+        ]
+
+    def construct_edit_image(self, edit_image, edit_mask):
+        if edit_image is not None and edit_mask is not None:
+            edit_image_rgb = pillow_convert(edit_image, "RGB")
+            edit_image_rgba = pillow_convert(edit_image, "RGBA")
+            edit_mask = pillow_convert(edit_mask, "L")
+
+            arr1 = np.array(edit_image_rgb)
+            arr2 = np.array(edit_mask)[:, :, np.newaxis]
+            result_array = np.concatenate((arr1, arr2), axis=2)
+            layer = Image.fromarray(result_array)
+
+            ret_data = {
+                "background": edit_image_rgba,
+                "composite": edit_image_rgba,
+                "layers": [layer]
+            }
+            return ret_data
+        else:
+            return None
+
+
+
 
     def create_ui(self):
         with gr.Row(equal_height=True, visible=True):
@@ -119,7 +151,19 @@ class DemoUI(object):
                         type='pil',
                         elem_id='preprocess_image_mask'
                     )
-
+        with gr.Row():
+            self.model_name_dd = gr.Dropdown(
+                choices=self.model_choices,
+                value=self.default_model_name,
+                label='Model Version')
+            self.task_type = gr.Dropdown(choices=self.task_model_list,
+                                         interactive=True,
+                                         value=self.task_model_list[0],
+                                         label='Task Type')
+            self.edit_type = gr.Dropdown(choices=self.edit_type_list,
+                                         interactive=True,
+                                         value=self.edit_type_list[0],
+                                         label='Edit Type')
         with gr.Row(variant='panel',
                     equal_height=True,
                     show_progress=False):
@@ -158,19 +202,7 @@ class DemoUI(object):
                         show_fullscreen_button=True,
                         format="png"
                     )
-            with gr.Row():
-                self.model_name_dd = gr.Dropdown(
-                    choices=self.model_choices,
-                    value=self.default_model_name,
-                    label='Model Version')
-                self.task_type = gr.Dropdown(choices=self.task_model_list,
-                                             interactive=True,
-                                             value=self.task_model_list[0],
-                                             label='Task Type')
-                self.edit_type = gr.Dropdown(choices=self.edit_type_list,
-                                             interactive=True,
-                                             value=self.edit_type_list[0],
-                                             label='Edit Type')
+
             with gr.Row():
                 self.step = gr.Slider(minimum=1,
                                       maximum=1000,
@@ -206,7 +238,8 @@ class DemoUI(object):
                     value=self.pipe.input.get("repainting_scale", 1.0),
                     visible=True,
                     label='Repainting Scale')
-
+            with gr.Row():
+                self.eg = gr.Column(visible=True)
 
 
 
@@ -258,10 +291,8 @@ class DemoUI(object):
 
         def change_task_type(task_type):
             task_info = self.task_model[task_type]
-            edit_type_list = self.edit_type_list
+            edit_type_list = [self.edit_type_list[0]]
             for preprocessor in task_info.get("PREPROCESSOR", []):
-                if preprocessor["TYPE"] in self.edit_type_dict:
-                    continue
                 preprocessor["REPAINTING_SCALE"] = task_info.get("REPAINTING_SCALE", 1.0)
                 self.edit_type_dict[preprocessor["TYPE"]] = preprocessor
                 edit_type_list.append(preprocessor["TYPE"])
@@ -298,10 +329,6 @@ class DemoUI(object):
                 else:
                     edit_image = pillow_convert(edit_image, "RGB")
                     edit_mask = Image.fromarray(edit_mask).convert('L')
-
-            edit_image.save("debug/edit_image.png") if edit_image is not None else None
-            edit_mask.save("debug/edit_mask.png") if edit_mask is not None else None
-            ref_image.save("debug/ref_image.png") if ref_image is not None else None
 
             return edit_image, edit_mask, ref_image
 
@@ -340,7 +367,7 @@ class DemoUI(object):
                 lora_path = model_path
             )
             et = time.time()
-            msg = f"prompt: {prompt}; seed: {seed}; cost time: {et - st}s"
+            msg = f"prompt: {prompt}; seed: {seed}; cost time: {et - st}s; repaiting scale: {repainting_scale}"
 
             return (gr.Image(value=image), gr.Column(visible=True),
                     gr.Image(value=pre_edit_image if pre_edit_image is not None else pre_ref_image),
@@ -374,6 +401,72 @@ class DemoUI(object):
                          inputs=[self.text] + chat_inputs,
                          outputs=chat_outputs,
                          queue=True)
+
+        def run_example(task_type, edit_type, prompt, ref_image, edit_image, edit_mask,
+                        output_h, output_w, seed):
+            model_path = self.task_model[task_type]["MODEL_PATH"]
+
+            step = self.pipe.input.get("sample_steps", 20)
+            cfg_scale = self.pipe.input.get("guide_scale", 20)
+
+            edit_info = self.edit_type_dict[edit_type]
+
+            edit_image = self.construct_edit_image(edit_image, edit_mask)
+
+            pre_edit_image, pre_edit_mask, pre_ref_image = preprocess_input(ref_image, edit_image)
+            pre_edit_image = edit_preprocess(edit_info, we.device_id, pre_edit_image, pre_edit_mask)
+            edit_info = edit_info or {}
+            repainting_scale = edit_info.get("REPAINTING_SCALE", 1.0)
+            st = time.time()
+            image, seed = self.pipe(
+                reference_image=pre_ref_image,
+                edit_image=pre_edit_image,
+                edit_mask=pre_edit_mask,
+                prompt=prompt,
+                output_height=output_h,
+                output_width=output_w,
+                sampler='flow_euler',
+                sample_steps=step,
+                guide_scale=cfg_scale,
+                seed=seed,
+                repainting_scale=repainting_scale,
+                lora_path=model_path
+            )
+            et = time.time()
+            msg = f"prompt: {prompt}; seed: {seed}; cost time: {et - st}s; repaiting scale: {repainting_scale}"
+            if pre_edit_image is not None:
+                ret_image = Image.composite(pre_edit_image, Image.new("RGB", pre_edit_image.size, (0, 0, 0)), pre_edit_mask)
+            else:
+                ret_image = None
+            return (gr.Image(value=image), gr.Column(visible=True),
+                    gr.Image(value=pre_edit_image if pre_edit_image is not None else pre_ref_image),
+                    gr.Image(value=pre_edit_mask if pre_edit_mask is not None else None),
+                    gr.Text(value=msg),
+                    gr.update(value=ret_image))
+
+        with self.eg:
+            self.example_edit_image = gr.Image(label='Edit Image',
+                                          type='pil',
+                                          image_mode='RGB',
+                                          visible=False)
+            self.example_edit_mask = gr.Image(label='Edit Image Mask',
+                                         type='pil',
+                                         image_mode='L',
+                                         visible=False)
+
+            self.examples = gr.Examples(
+                fn=run_example,
+                examples=self.all_examples,
+                inputs=[
+                    self.task_type, self.edit_type, self.text, self.reference_image, self.example_edit_image,
+                    self.example_edit_mask, self.output_height, self.output_width, self.seed
+                ],
+                outputs=[self.gallery_image, self.edit_preprocess_panel, self.edit_preprocess_preview,
+                         self.edit_preprocess_mask_preview, self.generation_info_preview, self.edit_image],
+                examples_per_page=6,
+                cache_examples=False,
+                run_on_click=True)
+
 
 def run_gr(cfg):
     with gr.Blocks() as demo:
