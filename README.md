@@ -37,7 +37,7 @@
 
 ## 📢 News
 - [x] **[2025.01.06]** Release the code and models of ACE++.
-- [] **[ToDo]** Release the demo on HuggingFace.
+- [x] **[2025.01.07]** Release the demo on [HuggingFace](https://huggingface.co/spaces/scepter-studio/ACE-Plus).
 - [] **[ToDo]** Update Models.
 
 ##  🔥 ACE Models
