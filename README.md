@@ -121,7 +121,7 @@ If you use this model in your research, please cite the works of FLUX.1-dev and 
 @article{mao2025ace++,
   title={ACE++: Instruction-Based Image Creation and Editing via Context-Aware Content Filling},
   author={Mao, Chaojie and Zhang, Jingfeng and Pan, Yulin and Jiang, Zeyinzi and Han, Zhen and Liu, Yu and Zhou, Jingren},
-  journal={arXiv preprint arXiv:},
+  journal={arXiv preprint arXiv:2501.02487},
   year={2025}
 }
 ```
