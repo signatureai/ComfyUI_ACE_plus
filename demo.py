@@ -134,23 +134,32 @@ class DemoUI(object):
                     elem_id='Reference_image'
                 )
             with gr.Column(scale=1, visible=True) as self.edit_preprocess_panel:
-                with gr.Accordion(label='Related Input Image', open=False):
-                    self.generation_info_preview = gr.Text(
-                        lines=2,
-                    )
-                    self.edit_preprocess_preview = gr.Image(
-                        height=600,
-                        interactive=False,
-                        type='pil',
-                        elem_id='preprocess_image'
-                    )
+                with gr.Row():
+                    with gr.Accordion(label='Related Input Image', open=False):
+                        self.edit_preprocess_preview = gr.Image(
+                            height=600,
+                            interactive=False,
+                            type='pil',
+                            elem_id='preprocess_image'
+                        )
 
-                    self.edit_preprocess_mask_preview = gr.Image(
-                        height=600,
-                        interactive=False,
-                        type='pil',
-                        elem_id='preprocess_image_mask'
-                    )
+                        self.edit_preprocess_mask_preview = gr.Image(
+                            height=600,
+                            interactive=False,
+                            type='pil',
+                            elem_id='preprocess_image_mask'
+                        )
+                with gr.Row():
+                    instruction = """
+                               **Instruction**:
+                               1. Please choose the Task Type based on the scenario of the generation task. We provide three types of generation capabilities: Portrait ID Preservation Generation(portrait), 
+                                Object ID Preservation Generation(subject), and Local Controlled Generation(local editing), which can be selected from the task dropdown menu.
+                               2. When uploading images in the Reference Image section, the generated image will reference the ID information of that image. Please ensure that the ID information is clear. 
+                                In the Edit Image section, the uploaded image will maintain its structural and content information, and you must draw a mask area to specify the region to be regenerated.
+                               3. When the task type is local editing, there are various editing types to choose from. Users can select different information preserving dimensions, such as edge information, 
+                                color information, and more. The pre-processing information can be viewed in the 'related input image' tab.
+                            """
+                    self.instruction = gr.Markdown(value=instruction)
         with gr.Row():
             self.model_name_dd = gr.Dropdown(
                 choices=self.model_choices,
@@ -164,6 +173,10 @@ class DemoUI(object):
                                          interactive=True,
                                          value=self.edit_type_list[0],
                                          label='Edit Type')
+        with gr.Row():
+            self.generation_info_preview = gr.Markdown(
+                label='System Log.',
+                show_label=True)
         with gr.Row(variant='panel',
                     equal_height=True,
                     show_progress=False):
@@ -314,6 +327,8 @@ class DemoUI(object):
         self.edit_type.change(change_edit_type, inputs=[self.edit_type], outputs=[self.repainting_scale])
 
         def preprocess_input(ref_image, edit_image_dict, preprocess = None):
+            err_msg = ""
+            is_suc = True
             if ref_image is not None:
                 ref_image = pillow_convert(ref_image, "RGB")
 
@@ -323,14 +338,19 @@ class DemoUI(object):
             else:
                 edit_image = edit_image_dict["background"]
                 edit_mask = np.array(edit_image_dict["layers"][0])[:, :, 3]
-                if np.sum(edit_image) < 1:
+                if np.sum(np.array(edit_image)) < 1:
                     edit_image = None
                     edit_mask = None
+                elif np.sum(np.array(edit_mask)) < 1:
+                    err_msg = "You must draw the repainting area for the edited image."
+                    return None, None, None, False, err_msg
                 else:
                     edit_image = pillow_convert(edit_image, "RGB")
                     edit_mask = Image.fromarray(edit_mask).convert('L')
-
-            return edit_image, edit_mask, ref_image
+            if ref_image is None and edit_image is None:
+                err_msg = "Please provide the reference image or edited image."
+                return None, None, None, False, err_msg
+            return edit_image, edit_mask, ref_image, is_suc, err_msg
 
         def run_chat(
                      prompt,
@@ -343,12 +363,26 @@ class DemoUI(object):
                      seed,
                      output_h,
                      output_w,
-                     repainting_scale
+                     repainting_scale,
+                progress=gr.Progress(track_tqdm=True)
         ):
             model_path = self.task_model[task_type]["MODEL_PATH"]
             edit_info = self.edit_type_dict[edit_type]
 
-            pre_edit_image, pre_edit_mask, pre_ref_image = preprocess_input(ref_image, edit_image)
+            if task_type in ["portrait", "subject"] and ref_image is None:
+                err_msg = "<mark>Please provide the reference image.</mark>"
+                return (gr.Image(), gr.Column(visible=True),
+                        gr.Image(),
+                        gr.Image(),
+                        gr.Text(value=err_msg))
+
+            pre_edit_image, pre_edit_mask, pre_ref_image, is_suc, err_msg = preprocess_input(ref_image, edit_image)
+            if not is_suc:
+                err_msg = f"<mark>{err_msg}</mark>"
+                return (gr.Image(), gr.Column(visible=True),
+                        gr.Image(),
+                        gr.Image(),
+                        gr.Text(value=err_msg))
             pre_edit_image = edit_preprocess(edit_info, we.device_id, pre_edit_image, pre_edit_mask)
             # edit_image["background"] = pre_edit_image
             st = time.time()
@@ -403,7 +437,7 @@ class DemoUI(object):
                          queue=True)
 
         def run_example(task_type, edit_type, prompt, ref_image, edit_image, edit_mask,
-                        output_h, output_w, seed):
+                        output_h, output_w, seed, progress=gr.Progress(track_tqdm=True)):
             model_path = self.task_model[task_type]["MODEL_PATH"]
 
             step = self.pipe.input.get("sample_steps", 20)
@@ -413,7 +447,7 @@ class DemoUI(object):
 
             edit_image = self.construct_edit_image(edit_image, edit_mask)
 
-            pre_edit_image, pre_edit_mask, pre_ref_image = preprocess_input(ref_image, edit_image)
+            pre_edit_image, pre_edit_mask, pre_ref_image, _, _ = preprocess_input(ref_image, edit_image)
             pre_edit_image = edit_preprocess(edit_info, we.device_id, pre_edit_image, pre_edit_mask)
             edit_info = edit_info or {}
             repainting_scale = edit_info.get("REPAINTING_SCALE", 1.0)
