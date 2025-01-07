@@ -43,22 +43,134 @@
 ##  🔥 ACE Models
 ACE++ provides a comprehensive toolkit for image editing and generation to support various applications. We encourage developers to choose the appropriate model based on their own scenarios and to fine-tune their models using data from their specific scenarios to achieve more stable results.  
 
-|     **Model**      |     *Tuning Method*      |                                                                     **Description**                                                                      | **Examples**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |                                                                                                                                                                                            **Model Path(scepter_path)**                                                                                                                                                                                             | 
-|:------------------:|:------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|   ACE++ Portrait   |     LoRA + ACE Data      |                                    Portrait-consistent generation to <br> maintain the consistency of the portrait .                                     | <img src="./assets/samples/portrait/human_1.jpg" alt="Image 1" height="256" style="display:inline-block;"/> <img src="./assets/samples/portrait/human_1_1.jpg" alt="Image 2" height="256" style="display:inline-block;"/><br><p style="display:inline-block;">Maintain the facial features,  A girl is wearing a neat police uniform and sporting a badge. <br> She is smiling with a friendly and confident demeanor. The background is blurred, featuring a cartoon logo. </p>                                |        [![ModelScope link](https://img.shields.io/badge/ModelScope-Model-blue)](https://www.modelscope.cn/models/iic/ACE_Plus/) <br> ms://iic/ACE_Plus@portrait/xxxx.safetensors] <br> [![HuggingFace link](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/ali-vilab/ACE_Plus/tree/main/portrait/) <br>  hf://ali-vilab/ACE_Plus@portrait/xxxx.safetensors        |
-|   ACE++ Subject    |     LoRA + ACE Data      |                  Subject-driven image generation <br> task to maintain the consistency of <br> a specific subject in different scenes.                   | <img src="./assets/samples/subject/subject_1.jpg" alt="Image 1" height="256" style="display:inline-block;"/> <img src="./assets/samples/subject/subject_1_1.jpg" alt="Image 2" height="256" style="display:inline-block;"/><br><p style="display:inline-block;">Display the logo in a minimalist style printed in white on a matte black ceramic coffee mug, alongside a steaming cup of coffee on a cozy cafe table. </p>                                                                                      |          [![ModelScope link](https://img.shields.io/badge/ModelScope-Model-blue)](https://www.modelscope.cn/models/iic/ACE_Plus/) <br> ms://iic/ACE_Plus@subject/xxxx.safetensors]<br> [![HuggingFace link](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/ali-vilab/ACE_Plus/tree/main/subject/) <br> hf://ali-vilab/ACE_Plus@subject/xxxx.safetensors           |
-| ACE++ LocalEditing |     LoRA + ACE Data      |                  Redrawing the mask area of images <br> while maintaining the original structural <br> information of the edited area.                   | <img src="./assets/samples/local/local_1.webp" alt="Image 1" height="160" style="display:inline-block;"/> <img src="./assets/samples/local/local_1_m.webp" alt="Image 1" height="160" style="display:inline-block;"/> <img src="./assets/samples/local/local_1_1.jpg" alt="Image 2" height="160" style="display:inline-block;"/><br><p style="display:inline-block;">By referencing the mask, restore a partial image from the doodle {image} that aligns with the textual explanation: "1 white old owl". </p> | [![ModelScope link](https://img.shields.io/badge/ModelScope-Model-blue)](https://www.modelscope.cn/models/iic/ACE_Plus/) <br> ms://iic/ACE_Plus@local_editing/xxxx.safetensors] <br> [![HuggingFace link](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/ali-vilab/ACE_Plus/tree/main/local_editing/) <br> hf://ali-vilab/ACE_Plus@local_editing/xxxx.safetensors |
-| ACE++  | Full Finetune + ACE Data |Fully finetuning a composite model with ACE’s <br> data to support various editing and reference <br> generation tasks through an instructive approach.   |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |                                                                                                                                                                                               Will be released soon.                                                                                                                                                                                                | 
+
+
+
+### ACE++ Portrait
+Portrait-consistent generation to maintain the consistency of the portrait.
+
+<table><tbody>
+  <tr>
+    <td>Tuning Method</td>
+    <td>Input</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Models</td>
+  </tr>
+  <tr>
+    <td>LoRA <br>+ ACE Data</td>
+    <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
+    <td><img src="./assets/samples/portrait/human_1_1.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Maintain the facial features. A girl is wearing a neat police uniform and sporting a badge. She is smiling with a friendly and confident demeanor. The background is blurred, featuring a cartoon logo."</td>
+    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/portrait/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
+  </tr>
+</tbody>
+</table>
+
+Models' scepter_path: 
+- **ModelScope:** ms://iic/ACE_Plus@portrait/xxxx.safetensors
+- **HuggingFace:** hf://ali-vilab/ACE_Plus@portrait/xxxx.safetensors
+
+
+### ACE++ Subject
+Subject-driven image generation task to maintain the consistency of a specific subject in different scenes.
+<table><tbody>
+  <tr>
+    <td>Tuning Method</td>
+    <td>Input</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Models</td>
+  </tr>
+  <tr>
+    <td>LoRA <br>+ ACE Data</td>
+    <td><img src="./assets/samples/subject/subject_1.jpg" width="200"></td>
+    <td><img src="./assets/samples/subject/subject_1_1.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Display the logo in a minimalist style printed in white on a matte black ceramic coffee mug, alongside a steaming cup of coffee on a cozy cafe table."</td>
+    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/subject/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
+  </tr>
+</tbody>
+</table>
+
+Models' scepter_path: 
+- **ModelScope:** ms://iic/ACE_Plus@subject/xxxx.safetensors
+- **HuggingFace:** hf://ali-vilab/ACE_Plus@subject/xxxx.safetensors
+
+
+### ACE++ LocalEditing
+Redrawing the mask area of images while maintaining the original structural information of the edited area.
+<table><tbody>
+  <tr>
+    <td>Tuning Method</td>
+    <td>Input</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Models</td>
+  </tr>
+  <tr>
+    <td>LoRA <br>+ ACE Data</td>
+    <td><img src="./assets/samples/local/local_1.webp" width="200"><br><img src="./assets/samples/local/local_1_m.webp" width="200"></td>
+    <td><img src="./assets/samples/local/local_1_1.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"By referencing the mask, restore a partial image from the doodle {image} that aligns with the textual explanation: "1 white old owl"."</td>
+    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/local_editing/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
+  </tr>
+</tbody>
+</table>
+
+Models' scepter_path: 
+- **ModelScope:** ms://iic/ACE_Plus@local_editing/xxxx.safetensors
+- **HuggingFace:** hf://ali-vilab/ACE_Plus@local_editing/xxxx.safetensors
+
+### ACE++ Fully [Coming soon] 
+Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
 
 ##  🔥 Applications
 The ACE++ model supports a wide range of downstream tasks through simple adaptations. Here are some examples, and we look forward to seeing the community explore even more exciting applications utilizing the ACE++ model.
 
-|     Application     |  ACE++ Model   |                                                                                                                                                                                                                                                                                             Examples                                                                                                                                                                                                                                                                                              |
-|:-------------------:|:--------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|       Try On        | ACE++ Subject  |                     <img src="./assets/samples/application/try_on/1_ref.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/try_on/1_1_edit.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/try_on/1_1_m.png" alt="Image 1" height="256" style="display:inline-block;"/> <img src="./assets/samples/application/try_on/1_1_res.png" alt="Image 2" height="256" style="display:inline-block;"/><br> <p style="display:inline-block;">The woman dresses this skirt.</p>                     |
-|     Logo Paste      | ACE++ Subject  |        <img src="./assets/samples/application/logo_paste/1_ref.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/logo_paste/1_1_edit.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/logo_paste/1_1_m.png" alt="Image 1" height="256" style="display:inline-block;"/> <img src="./assets/samples/application/logo_paste/1_1_res.webp" alt="Image 2" height="256" style="display:inline-block;"/><br> <p style="display:inline-block;">The logo is printed on the headphones.</p>        |
-|    Photo Editing    | ACE++ Subject  |      <img src="./assets/samples/application/photo_editing/1_ref.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/photo_editing/1_1_edit.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/photo_editing/1_1_m.png" alt="Image 1" height="256" style="display:inline-block;"/> <img src="./assets/samples/application/photo_editing/1_1_res.jpg" alt="Image 2" height="256" style="display:inline-block;"/><br> <p style="display:inline-block;">The item is put on the ground.</p>       |
-| Movie Poster Editor | ACE++ Portrait | <img src="./assets/samples/application/movie_poster/1_ref.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/movie_poster/1_1_edit.png" alt="Image 1" height="256" style="display:inline-block;"/><img src="./assets/samples/application/movie_poster/1_1_m.png" alt="Image 1" height="256" style="display:inline-block;"/> <img src="./assets/samples/application/movie_poster/1_1_res.webp" alt="Image 2" height="256" style="display:inline-block;"/><br> <p style="display:inline-block;">The man is facing the camera and is smiling.</p> |
+<table><tbody>
+  <tr>
+    <th align="center" colspan="1">Application</th>
+    <th align="center" colspan="1">ACE++ Model</th>
+    <th align="center" colspan="5">Examples</th>
+  </tr>
+  <tr>
+    <td>Try On</td>
+    <td>ACE++ Subject</td>
+    <td><img src="./assets/samples/application/try_on/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/try_on/1_1_edit.png" width="200"></td>
+    <td><img src="./assets/samples/application/try_on/1_1_m.png" width="200"></td>
+    <td><img src="./assets/samples/application/try_on/1_1_res.png" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The woman dresses this skirt."</td>
+  </tr>
+  <tr>
+    <td>Logo Paste</td>
+    <td>ACE++ Subject</td>
+    <td><img src="./assets/samples/application/logo_paste/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/logo_paste/1_1_edit.png" width="200"></td>
+    <td><img src="./assets/samples/application/logo_paste/1_1_m.png" width="200"></td>
+    <td><img src="./assets/samples/application/logo_paste/1_1_res.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The logo is printed on the headphones."</td>
+  </tr>
+  <tr>
+    <td>Photo Editing</td>
+    <td>ACE++ Subject</td>
+    <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_1_edit.png" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_1_m.png" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_1_res.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The item is put on the ground."</td>
+  </tr>
+  <tr>
+    <td>Movie Poster Editor</td>
+    <td>ACE++ Portrait</td>
+    <td><img src="./assets/samples/application/movie_poster/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/movie_poster/1_1_edit.png" width="200"></td>
+    <td><img src="./assets/samples/application/movie_poster/1_1_m.png" width="200"></td>
+    <td><img src="./assets/samples/application/movie_poster/1_1_res.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The man is facing the camera and is smiling."</td>
+  </tr>
+</tbody>
+</table>
 
 ## ⚙️️ Installation
 Download the code using the following command:
