@@ -38,6 +38,7 @@
 ## 📢 News
 - [x] **[2025.01.06]** Release the code and models of ACE++.
 - [x] **[2025.01.07]** Release the demo on [HuggingFace](https://huggingface.co/spaces/scepter-studio/ACE-Plus).
+- [x] **[2025.01.16]** Release the training code for lora.
 - [] **[ToDo]** Update Models.
 
 ##  🔥 ACE Models
