@@ -206,6 +206,28 @@ export LOCAL_MODEL_PATH="ms://iic/ACE_Plus@local_editing/comfyui_local_lora16.sa
 python infer.py
 ```
 
+## 🚀 Train
+We provide training code that allows users to train on their own data. Reference the data in 'data/train.csv' and 'data/eval.csv' to construct the training data and test data, respectively. We use '#;#' to separate fields. 
+The required fields include the following six, with their explanations as follows.
+```angular2html
+"edit_image": represents the input image for the editing task. If it is not an editing task but a reference generation, this field can be left empty.
+"edit_mask": represents the input image mask for the editing task, used to specify the editing area. If it is not an editing task but rather for reference generation, this field can be left empty.
+"ref_image": represents the input image for the reference image generation task; if it is a pure editing task, this field can be left empty.
+"target_image": represents the generated target image and cannot be empty.
+"prompt": represents the prompt for the generation task.
+"data_type": represents the type of data, which can be 'portrait', 'subject', or 'local'. This field is not used in training phase.
+```
+
+All parameters related to training are stored in 'train_config/ace_plus_lora.yaml'. To run the training code, execute the following command.
+
+```bash
+export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
+python run_train.py  --cfg train_config/ace_plus_lora.yaml
+```
+
+The models trained by ACE++ can be found in ./examples/exp_example/xxxx/checkpoints/xxxx/0_SwiftLoRA/comfyui_model.safetensors.
+
+
 ## 💻 Demo
 We have built a GUI demo based on Gradio to help users better utilize the ACE++ model. Just execute the following command.
 ```bash

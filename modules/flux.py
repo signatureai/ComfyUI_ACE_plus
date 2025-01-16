@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) Alibaba, Inc. and its affiliates.
-import math, torch
+# This file contains code that is adapted from
+# https://github.com/black-forest-labs/flux.git
+import math
+import torch
+from torch import Tensor, nn
 from collections import OrderedDict
 from functools import partial
 from einops import rearrange, repeat
@@ -9,90 +13,82 @@ from scepter.modules.model.registry import BACKBONES
 from scepter.modules.utils.config import dict_to_yaml
 from scepter.modules.utils.distribute import we
 from scepter.modules.utils.file_system import FS
-from torch import Tensor, nn
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.checkpoint import checkpoint_sequential
-from .layers import (DoubleStreamBlock, EmbedND, LastLayer,
-                                 MLPEmbedder, SingleStreamBlock,
-                                 timestep_embedding)
-
+from torch.nn.utils.rnn import pad_sequence
+from .layers import (DoubleStreamBlock, EmbedND, LastLayer, MLPEmbedder,
+                     SingleStreamBlock, timestep_embedding)
 @BACKBONES.register_class()
 class Flux(BaseModel):
     """
     Transformer backbone Diffusion model with RoPE.
     """
     para_dict = {
-        "IN_CHANNELS": {
-            "value": 64,
-            "description": "model's input channels."
+        'IN_CHANNELS': {
+            'value': 64,
+            'description': "model's input channels."
         },
-        "OUT_CHANNELS": {
-            "value": 64,
-            "description": "model's output channels."
+        'OUT_CHANNELS': {
+            'value': 64,
+            'description': "model's output channels."
         },
-        "HIDDEN_SIZE": {
-            "value": 1024,
-            "description": "model's hidden size."
+        'HIDDEN_SIZE': {
+            'value': 1024,
+            'description': "model's hidden size."
         },
-        "NUM_HEADS": {
-            "value": 16,
-            "description": "number of heads in the transformer."
+        'NUM_HEADS': {
+            'value': 16,
+            'description': 'number of heads in the transformer.'
         },
-        "AXES_DIM": {
-            "value": [16, 56, 56],
-            "description": "dimensions of the axes of the positional encoding."
+        'AXES_DIM': {
+            'value': [16, 56, 56],
+            'description': 'dimensions of the axes of the positional encoding.'
         },
-        "THETA": {
-            "value": 10_000,
-            "description": "theta for positional encoding."
+        'THETA': {
+            'value': 10_000,
+            'description': 'theta for positional encoding.'
         },
-        "VEC_IN_DIM": {
-            "value": 768,
-            "description": "dimension of the vector input."
+        'VEC_IN_DIM': {
+            'value': 768,
+            'description': 'dimension of the vector input.'
         },
-        "GUIDANCE_EMBED": {
-            "value": False,
-            "description": "whether to use guidance embedding."
+        'GUIDANCE_EMBED': {
+            'value': False,
+            'description': 'whether to use guidance embedding.'
         },
-        "CONTEXT_IN_DIM": {
-            "value": 4096,
-            "description": "dimension of the context input."
+        'CONTEXT_IN_DIM': {
+            'value': 4096,
+            'description': 'dimension of the context input.'
         },
-        "MLP_RATIO": {
-            "value": 4.0,
-            "description": "ratio of mlp hidden size to hidden size."
+        'MLP_RATIO': {
+            'value': 4.0,
+            'description': 'ratio of mlp hidden size to hidden size.'
         },
-        "QKV_BIAS": {
-            "value": True,
-            "description": "whether to use bias in qkv projection."
+        'QKV_BIAS': {
+            'value': True,
+            'description': 'whether to use bias in qkv projection.'
         },
-        "DEPTH": {
-            "value": 19,
-            "description": "number of transformer blocks."
+        'DEPTH': {
+            'value': 19,
+            'description': 'number of transformer blocks.'
         },
-        "DEPTH_SINGLE_BLOCKS": {
-            "value": 38,
-            "description": "number of transformer blocks in the single stream block."
+        'DEPTH_SINGLE_BLOCKS': {
+            'value':
+            38,
+            'description':
+            'number of transformer blocks in the single stream block.'
         },
-        "USE_GRAD_CHECKPOINT": {
-            "value": False,
-            "description": "whether to use gradient checkpointing."
-        },
-        "ATTN_BACKEND": {
-            "value": "pytorch",
-            "description": "backend for the transformer blocks, 'pytorch' or 'flash_attn'."
+        'USE_GRAD_CHECKPOINT': {
+            'value': False,
+            'description': 'whether to use gradient checkpointing.'
         }
     }
-    def __init__(
-            self,
-            cfg,
-            logger = None
-    ):
+
+    def __init__(self, cfg, logger=None):
         super().__init__(cfg, logger=logger)
         self.in_channels = cfg.IN_CHANNELS
-        self.out_channels = cfg.get("OUT_CHANNELS", self.in_channels)
-        hidden_size = cfg.get("HIDDEN_SIZE", 1024)
-        num_heads = cfg.get("NUM_HEADS", 16)
+        self.out_channels = cfg.get('OUT_CHANNELS', self.in_channels)
+        hidden_size = cfg.get('HIDDEN_SIZE', 1024)
+        num_heads = cfg.get('NUM_HEADS', 16)
         axes_dim = cfg.AXES_DIM
         theta = cfg.THETA
         vec_in_dim = cfg.VEC_IN_DIM
@@ -117,16 +113,17 @@ class Flux(BaseModel):
             )
         pe_dim = hidden_size // num_heads
         if sum(axes_dim) != pe_dim:
-            raise ValueError(f"Got {axes_dim} but expected positional dim {pe_dim}")
+            raise ValueError(
+                f"Got {axes_dim} but expected positional dim {pe_dim}")
         self.hidden_size = hidden_size
         self.num_heads = num_heads
-        self.pe_embedder = EmbedND(dim=pe_dim, theta=theta, axes_dim= axes_dim)
+        self.pe_embedder = EmbedND(dim=pe_dim, theta=theta, axes_dim=axes_dim)
         self.img_in = nn.Linear(self.in_channels, self.hidden_size, bias=True)
         self.time_in = MLPEmbedder(in_dim=256, hidden_dim=self.hidden_size)
         self.vector_in = MLPEmbedder(vec_in_dim, self.hidden_size)
-        self.guidance_in = (
-            MLPEmbedder(in_dim=256, hidden_dim=self.hidden_size) if self.guidance_embed else nn.Identity()
-        )
+        self.guidance_in = (MLPEmbedder(in_dim=256,
+                                        hidden_dim=self.hidden_size)
+                            if self.guidance_embed else nn.Identity())
         self.txt_in = nn.Linear(context_in_dim, self.hidden_size)
 
         self.double_blocks = nn.ModuleList(
@@ -150,6 +147,28 @@ class Flux(BaseModel):
         )
 
         self.final_layer = LastLayer(self.hidden_size, 1, self.out_channels)
+
+    def prepare_input(self, x, context, y, x_shape=None):
+        # x.shape [6, 16, 16, 16] target is [6, 16, 768, 1360]
+        bs, c, h, w = x.shape
+        x = rearrange(x, "b c (h ph) (w pw) -> b (h w) (c ph pw)", ph=2, pw=2)
+        x_id = torch.zeros(h // 2, w // 2, 3)
+        x_id[..., 1] = x_id[..., 1] + torch.arange(h // 2)[:, None]
+        x_id[..., 2] = x_id[..., 2] + torch.arange(w // 2)[None, :]
+        x_ids = repeat(x_id, "h w c -> b (h w) c", b=bs)
+        txt_ids = torch.zeros(bs, context.shape[1], 3)
+        return x, x_ids.to(x), context.to(x), txt_ids.to(x), y.to(x), h, w
+
+    def unpack(self, x: Tensor, height: int, width: int) -> Tensor:
+        return rearrange(
+            x,
+            "b (h w) (c ph pw) -> b c (h ph) (w pw)",
+            h=math.ceil(height/2),
+            w=math.ceil(width/2),
+            ph=2,
+            pw=2,
+        )
+
     def merge_diffuser_lora(self, ori_sd, lora_sd, scale=1.0):
         key_map = {
             "single_blocks.{}.linear1.weight": {"key_list": [
@@ -261,6 +280,7 @@ class Flux(BaseModel):
             ori_sd[key] += scale * current_weight
         return ori_sd
 
+
     def merge_blackforest_lora(self, ori_sd, lora_sd, scale = 1.0):
         have_lora_keys = {}
         cover_lora_keys = set()
@@ -329,9 +349,6 @@ class Flux(BaseModel):
         if next(self.parameters()).device.type == 'meta':
             map_location = torch.device(we.device_id)
             safe_device = we.device_id
-        # elif next(self.parameters()).device.type == 'cuda':
-        #     map_location = torch.device(we.device_id)
-        #     safe_device = we.device_id
         else:
             map_location = "cpu"
             safe_device = "cpu"
@@ -438,6 +455,71 @@ class Flux(BaseModel):
             if len(unexpected) > 0:
                 self.logger.info(f'\nUnexpected Keys:\n {unexpected}')
 
+    def forward(
+        self,
+        x: Tensor,
+        t: Tensor,
+        cond: dict = {},
+        guidance: Tensor | None = None,
+        gc_seg: int = 0
+    ) -> Tensor:
+        x, x_ids, txt, txt_ids, y, h, w = self.prepare_input(x, cond["context"], cond["y"])
+        # running on sequences img
+        x = self.img_in(x)
+        vec = self.time_in(timestep_embedding(t, 256))
+        if self.guidance_embed:
+            if guidance is None:
+                raise ValueError("Didn't get guidance strength for guidance distilled model.")
+            vec = vec + self.guidance_in(timestep_embedding(guidance, 256))
+        vec = vec + self.vector_in(y)
+        txt = self.txt_in(txt)
+        ids = torch.cat((txt_ids, x_ids), dim=1)
+        pe = self.pe_embedder(ids)
+        kwargs = dict(
+            vec=vec,
+            pe=pe,
+            txt_length=txt.shape[1],
+        )
+        x = torch.cat((txt, x), 1)
+        if self.use_grad_checkpoint and gc_seg >= 0:
+            x = checkpoint_sequential(
+                functions=[partial(block, **kwargs) for block in self.double_blocks],
+                segments=gc_seg if gc_seg > 0 else len(self.double_blocks),
+                input=x,
+                use_reentrant=False
+            )
+        else:
+            for block in self.double_blocks:
+                x = block(x, **kwargs)
+
+        kwargs = dict(
+            vec=vec,
+            pe=pe,
+        )
+
+        if self.use_grad_checkpoint and gc_seg >= 0:
+            x = checkpoint_sequential(
+                functions=[partial(block, **kwargs) for block in self.single_blocks],
+                segments=gc_seg if gc_seg > 0 else len(self.single_blocks),
+                input=x,
+                use_reentrant=False
+            )
+        else:
+            for block in self.single_blocks:
+                x = block(x, **kwargs)
+        x = x[:, txt.shape[1] :, ...]
+        x = self.final_layer(x, vec)  # (N, T, patch_size ** 2 * out_channels) 6 64 64
+        x = self.unpack(x, h, w)
+        return x
+
+    @staticmethod
+    def get_config_template():
+        return dict_to_yaml('BACKBONE',
+                            __class__.__name__,
+                            Flux.para_dict,
+                            set_name=True)
+@BACKBONES.register_class()
+class FluxMR(Flux):
     def prepare_input(self, x, cond):
         if isinstance(cond['context'], list):
             context, y = torch.cat(cond["context"], dim=0).to(x), torch.cat(cond["y"], dim=0).to(x)
@@ -562,10 +644,10 @@ class Flux(BaseModel):
     def get_config_template():
         return dict_to_yaml('MODEL',
                             __class__.__name__,
-                            Flux.para_dict,
+                            FluxMR.para_dict,
                             set_name=True)
 @BACKBONES.register_class()
-class ACEPlus(Flux):
+class FluxMRACEPlus(FluxMR):
     def __init__(self, cfg, logger = None):
         super().__init__(cfg, logger)
     def prepare_input(self, x, cond):
@@ -577,8 +659,10 @@ class ACEPlus(Flux):
             ix = ix[:, :shape[0] * shape[1]].view(-1, shape[0], shape[1])
             imask = torch.ones_like(ix[[0], :, :]) if imask is None else imask.squeeze(0)
             if len(ie) > 0:
-                ie = ie[0].squeeze(0)
-                ie_mask = torch.ones((ix.shape[0] * 4, ix.shape[1], ix.shape[2])) if ie_mask is None else ie_mask[0].squeeze(0)
+                ie = [iie.squeeze(0) for iie in ie]
+                ie_mask = [torch.ones((ix.shape[0] * 4, ix.shape[1], ix.shape[2])) if iime is None else iime.squeeze(0) for iime in ie_mask]
+                ie = torch.cat(ie, dim=-1)
+                ie_mask = torch.cat(ie_mask, dim=-1)
             else:
                 ie, ie_mask = torch.zeros_like(ix).to(x), torch.ones_like(imask).to(x)
             ix = torch.cat([ix, ie, ie_mask], dim=0)
@@ -606,7 +690,6 @@ class ACEPlus(Flux):
         x = pad_sequence(tuple(x_list), batch_first=True)
         x_ids = pad_sequence(tuple(x_id_list), batch_first=True).to(x)  # [b,pad_seq,2] pad (0.,0.) at dim2
         mask_x = pad_sequence(tuple(mask_x_list), batch_first=True)
-        # import pdb;pdb.set_trace()
         if isinstance(context, list):
             txt_list, mask_txt_list, y_list = [], [], []
             for sample_id, (ctx, yy) in enumerate(zip(context, y)):
@@ -628,5 +711,5 @@ class ACEPlus(Flux):
     def get_config_template():
         return dict_to_yaml('MODEL',
                             __class__.__name__,
-                            ACEPlus.para_dict,
+                            FluxMRACEPlus.para_dict,
                             set_name=True)
