@@ -40,12 +40,10 @@ SOLVER:
 
   #
   FILE_SYSTEM:
-    - NAME: AliyunOssFs
-      ENDPOINT: http://oss-cn-wulanchabu-internal.aliyuncs.com
-      BUCKET: visionai-wlcb
-      OSS_AK: ${OSS_AK}
-      OSS_SK: ${OSS_SK}
-      TEMP_DIR: ${TEMP_DIR}
+    - NAME: HuggingfaceFs
+      TEMP_DIR: ./cache
+    - NAME: ModelscopeFs
+      TEMP_DIR: ./cache
   #
   MODEL:
     NAME: LatentDiffusionACEPlus
