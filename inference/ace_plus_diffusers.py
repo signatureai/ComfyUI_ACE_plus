@@ -88,7 +88,10 @@ class ACEPlusDiffuserInference():
         if isinstance(prompt, str):
             prompt = [prompt]
         seed = seed if seed >= 0 else random.randint(0, 2 ** 32 - 1)
-        image, mask, out_h, out_w, slice_w = self.image_processor.preprocess(reference_image, edit_image, edit_mask, repainting_scale = repainting_scale)
+        image, mask, out_h, out_w, slice_w = self.image_processor.preprocess(reference_image, edit_image, edit_mask,
+                                                                             width = output_width,
+                                                                             height = output_height,
+                                                                             repainting_scale = repainting_scale)
         h, w = image.shape[1:]
         generator = torch.Generator("cpu").manual_seed(seed)
         masked_image_latents = self.prepare_input(image, mask,
