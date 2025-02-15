@@ -35,11 +35,119 @@
     </tr>
   </table>
 
+## 📚 Introduction
+
+The original intention behind the design of ACE++ was to unify reference image generation, local editing, 
+and controllable generation into a single framework, and to enable one model to adapt to a wider range of tasks. 
+A more versatile model is often capable of handling more complex tasks. We have already released three LoRA models, 
+focusing on portraits, objects, and regional editing, with the expectation that each would demonstrate strong adaptability 
+within their respective domains. Undoubtedly, this presents certain challenges. 
+
+We are currently training a fully fine-tuned model, which has now entered the final stage of quality tuning. 
+We are confident it will be released soon. This model will support a broader range of capabilities and is 
+expected to empower community developers to build even more interesting applications.
+
 ## 📢 News
 - [x] **[2025.01.06]** Release the code and models of ACE++.
 - [x] **[2025.01.07]** Release the demo on [HuggingFace](https://huggingface.co/spaces/scepter-studio/ACE-Plus).
 - [x] **[2025.01.16]** Release the training code for lora.
-- [] **[ToDo]** Update Models.
+- [x] **[2025.02.15]** Collection of workflows in Comfyui.
+- [x] **[2025.02.15]** Release the config for fully fine-tuning.
+- [] **[ToDo]** Release a unified fft model for ACE++, support more image to image tasks.
+
+## 🔥 Comfyui Workflows in community
+We are deeply grateful to the community developers for building many fascinating applications based on the ACE++ series of models. 
+During this process, we have received valuable feedback, particularly regarding artifacts in generated images and the stability of the results. 
+In response to these issues, many developers have proposed creative solutions, which have greatly inspired us, and we pay tribute to them. 
+At the same time, we will take these concerns into account in our further optimization efforts, carefully evaluating and testing before releasing new models.
+
+In the table below, we have briefly listed some workflows for everyone to use.
+
+<table><tbody>
+  <tr>
+    <td>Workflow</td>
+    <td>Author</td>
+    <td>Example</td>
+  </tr>
+  <tr>
+    <td><a href="https://www.runninghub.cn/post/1890052281759571970"> 【飞翔鲸】王炸！FLUX+ACE++换头 </a> </td>
+    <td><a href="https://www.runninghub.cn/user-center/1851827947798740994"> 飞翔鲸 </a></td>
+    <td><img src="./assets/comfyui/feixiangjing_face.png" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://www.runninghub.cn/post/1890014204382916609"> 最新ACE++ Redux 万物迁移 AI模特换装 UP 楚门的AI世界 </a> </td>
+    <td><a href="https://www.runninghub.cn/user-center/1865415077888405506"> 楚门的AI世界 </a></td>
+    <td><img src="./assets/comfyui/chumen_tryon.jpg" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://openart.ai/workflows/t8star/ace-plusfillredux/bgQDNz8SeySMDqn13ZBv"> Ace Plus+Fill+Redux稳定无抽卡换装工作流</a> </td>
+    <td><a href="https://openart.ai/workflows/profile/t8star?sort=latest"> T8star-Aix </a></td>
+    <td><img src="./assets/comfyui/t8_star_tryon.jpg" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://openart.ai/workflows/t8star/ace-plusfillredux/ifIvaWXW9QkLtNV405j7"> Ace Plus+Fill+Redux稳定少抽卡标志工作流</a> </td>
+    <td><a href="https://openart.ai/workflows/profile/t8star?sort=latest"> T8star-Aix </a></td>
+    <td><img src="./assets/comfyui/t8_star_logo.jpg" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://openart.ai/workflows/t8star/ace-plusfillredux/WdwUwGXPLHhnSOlSEfTg"> Ace Plus+Fill+Redux稳定无抽卡换脸工作流</a> </td>
+    <td><a href="https://openart.ai/workflows/profile/t8star?sort=latest"> T8star-Aix </a></td>
+    <td><img src="./assets/comfyui/t8_star_face.jpg" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://openart.ai/workflows/cat_untimely_42/ace-face-swap-in-different-styles/VocvdfQrvDhmKNLEBwJY"> ace++ face swap in different styles </a> </td>
+    <td><a href="https://openart.ai/workflows/profile/cat_untimely_42?sort=latest"> jax </a></td>
+    <td><img src="./assets/comfyui/jax_face_swap.jpg" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://openart.ai/workflows/leeguandong/fllux-ace-subject-without-reference-image/HjYf6Eae2PRGACJWXdrE"> fllux ace++ subject without reference image </a> </td>
+    <td><a href="https://openart.ai/workflows/profile/leeguandong?sort=latest"> leeguandong </a></td>
+    <td><img src="./assets/comfyui/leeguandong_subject.jpg" height="200"></td>
+  </tr>
+  <tr>
+    <td><a href="https://openart.ai/workflows/whale_waterlogged_60/scepter-ace-more-convenient-replacement-of-everything/gjAsh5rGjfC6OEB2AUZv"> Scepter-ACE++ More convenient replacement of everything</a> </td>
+    <td><a href="https://openart.ai/workflows/profile/whale_waterlogged_60?sort=latest"> HaoBeen </a></td>
+    <td><img src="./assets/comfyui/haobeen_ace_plus.jpg" height="200"></td>
+  </tr>
+</tbody>
+</table>
+
+Additionally, many bloggers have published tutorials on how to use it, which are listed in the table below.
+
+<table><tbody>
+  <tr>
+    <td>Tutorial</td>
+  </tr>
+  <tr>
+    <td><a href="https://www.youtube.com/watch?v=5OwcxugdWxI"> Best Faceswapper I've Seen. ACE++ in ComfyUI. </a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.youtube.com/watch?v=2fgT35H_tuE&pp=ygUIYWNlIHBsdXM%3D"> ACE ++ In ComfyUI All-round Creator & Editor - More Than Just A Faceswap AI </a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.youtube.com/watch?v=XU376PzgnXc"> Ai绘画进阶140-咦？大家用的都不对？！Ace Plus工作流正确搭建方式及逻辑，参数详解，Flux Fill，Redux联用-T8 Comfyui教程</a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.youtube.com/watch?v=1cbOkN0mTw0"> ace++：告别 Lora 训练，无需pulid，轻松打造专属角色！ | No Lora Training, Easily Create Exclusive Characters!</a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.youtube.com/watch?v=0wMoWSTm5Hc"> Ace++ and Flux Fill: Advanced Face Swapping Made Easy in ComfyUI | No Lora Training, Easily Create Exclusive Characters!</a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.youtube.com/watch?v=7GrkIFuRQAc"> ComfyUI - ACE Plus Subject Portrait Lora </a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.bilibili.com/video/BV1HiKpeuE8o/?spm_id_from=333.337.search-card.all.click&vd_source=927630f34c77eee560afd69cfdba3f47"> 🤗AI一致性技术新突破！ACE++技术一致性comfyui工作流🍋‍ </a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.bilibili.com/video/BV1obN9enEvp/?spm_id_from=333.337.search-card.all.click&vd_source=927630f34c77eee560afd69cfdba3f47"> ComfyUI 第55集 人像换脸 FLUX的FILL模型+ACE LORA </a> </td>
+  </tr>
+  <tr>
+    <td><a href="https://www.bilibili.com/video/BV1pPN3eBEtr/?spm_id_from=333.337.search-card.all.click&vd_source=927630f34c77eee560afd69cfdba3f47"> 换装变脸贴logo，无所不能的Ace_Plus lora </a> </td>
+  </tr>
+</tbody>
+</table>
+
 
 ##  🔥 ACE Models
 ACE++ provides a comprehensive toolkit for image editing and generation to support various applications. We encourage developers to choose the appropriate model based on their own scenarios and to fine-tune their models using data from their specific scenarios to achieve more stable results.  

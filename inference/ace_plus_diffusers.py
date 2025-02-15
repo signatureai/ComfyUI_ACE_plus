@@ -12,7 +12,6 @@ from scepter.modules.utils.logger import get_logger
 from transformers import T5TokenizerFast
 from .utils import ACEPlusImageProcessor
 
-
 class ACEPlusDiffuserInference():
     def __init__(self, logger=None):
         if logger is None:
@@ -38,7 +37,6 @@ class ACEPlusDiffuserInference():
                                                       additional_special_tokens=["{image}"])
         self.pipe.tokenizer_2 = tokenizer_2
         self.load_default(cfg.DEFAULT_PARAS)
-
 
     def prepare_input(self,
                       image,
@@ -100,6 +98,8 @@ class ACEPlusDiffuserInference():
         if lora_path is not None:
             with FS.get_from(lora_path) as local_path:
                 self.pipe.load_lora_weights(local_path)
+
+
 
         image = self.pipe(
             prompt=prompt,
