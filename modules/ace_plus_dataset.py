@@ -152,7 +152,7 @@ class ACEPlusDataset(BaseDataset):
         edit_id, ref_id, src_image_list, src_mask_list = [], [], [], []
         # parse editing image
         if edit_image is None:
-            edit_image = Image.new("RGB", target_image.size, 255)
+            edit_image = Image.new("RGB", target_image.size, (255, 255, 255))
             edit_mask = Image.new("L", edit_image.size, 255)
         elif edit_mask is None:
             edit_mask = Image.new("L", edit_image.size, 255)
