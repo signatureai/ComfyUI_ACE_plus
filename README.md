@@ -1,5 +1,7 @@
 <p align="center">
 
+
+
   <h2 align="center"><img src="assets/figures/icon.png" height=16> ++: Instruction-Based Image Creation and Editing <br> via Context-Aware Content Filling </h2>
 
   <p align="center">
