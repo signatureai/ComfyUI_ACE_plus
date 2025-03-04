@@ -86,7 +86,8 @@ class ACEPlusDiffuserInference():
         if isinstance(prompt, str):
             prompt = [prompt]
         seed = seed if seed >= 0 else random.randint(0, 2 ** 32 - 1)
-        image, mask, out_h, out_w, slice_w = self.image_processor.preprocess(reference_image, edit_image, edit_mask,
+        # edit_image, edit_mask, change_image, content_image, out_h, out_w, slice_w
+        image, mask, _, _, out_h, out_w, slice_w = self.image_processor.preprocess(reference_image, edit_image, edit_mask,
                                                                              width = output_width,
                                                                              height = output_height,
                                                                              repainting_scale = repainting_scale)
