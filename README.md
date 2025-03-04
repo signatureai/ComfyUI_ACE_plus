@@ -55,7 +55,7 @@ expected to empower community developers to build even more interesting applicat
 - [x] **[2025.01.16]** Release the training code for lora.
 - [x] **[2025.02.15]** Collection of workflows in Comfyui.
 - [x] **[2025.02.15]** Release the config for fully fine-tuning.
-- [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks.
+- [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks. [HuggingFace](https://huggingface.co/ali-vilab/ACE_Plus/tree/main)
 
 ## 🔥The unified fft model for ACE++
 Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
