@@ -127,11 +127,13 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         if x is None: return x
         return F.interpolate(x.unsqueeze(0), size = size, mode='nearest-exact')
     def parse_ref_and_edit(self, src_image,
+                           modify_image,
                            src_image_mask,
                            text_embedding,
                            #text_mask,
                            edit_id):
         edit_image = []
+        modi_image = []
         edit_mask = []
         ref_image = []
         ref_mask = []
@@ -140,11 +142,14 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         ref_id = []
         txt = []
         txt_y = []
-        for sample_id, (one_src, one_src_mask,
+        for sample_id, (one_src,
+                        one_modify,
+                        one_src_mask,
                         one_text_embedding,
                         one_text_y,
                         # one_text_mask,
                         one_edit_id)  in enumerate(zip(src_image,
+                                        modify_image,
                                         src_image_mask,
                                         text_embedding["context"],
                                         text_embedding["y"],
@@ -160,10 +165,22 @@ class LatentDiffusionACEPlus(LatentDiffusion):
             # process edit image & edit image mask
             current_edit_image = to_device([one_src[i] for i in one_edit_id], strict=False)
             current_edit_image = [v.squeeze(0) for v in self.encode_first_stage(current_edit_image)]
-            current_edit_image_mask = to_device([one_src_mask[i] for i in one_edit_id], strict=False)
-            current_edit_image_mask = [self.reshape_func(m).squeeze(0) for m in current_edit_image_mask]
+            # process modi image
+            current_modify_image = to_device([one_modify[i] for i in one_edit_id],
+                                             strict=False)
+            current_modify_image = [
+                v.squeeze(0)
+                for v in self.encode_first_stage(current_modify_image)
+            ]
+            current_edit_image_mask = to_device(
+                [one_src_mask[i] for i in one_edit_id], strict=False)
+            current_edit_image_mask = [
+                self.reshape_func(m).squeeze(0)
+                for m in current_edit_image_mask
+            ]
 
             edit_image.append(current_edit_image)
+            modi_image.append(current_modify_image)
             edit_mask.append(current_edit_image_mask)
             ref_context.append(one_text_embedding[:len(ref_id[-1])])
             ref_y.append(one_text_y[:len(ref_id[-1])])
@@ -177,6 +194,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
             txt_y.append(one_text_y[-1])
         return {
             "edit": edit_image,
+            'modify': modi_image,
             "edit_mask": edit_mask,
             "edit_id": edit_id,
             "ref_context": ref_context,
@@ -201,8 +219,9 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         return mask
 
     def forward_train(self,
-                      src_image_list =[],
-                      src_mask_list =[],
+                      src_image_list=[],
+                      modify_image_list=[],
+                      src_mask_list=[],
                       edit_id=[],
                       image=None,
                       image_mask=None,
@@ -210,18 +229,19 @@ class LatentDiffusionACEPlus(LatentDiffusion):
                       prompt=[],
                       **kwargs):
         '''
-               Args:
-                   src_image: list of list of src_image
-                   src_image_mask: list of list of src_image_mask
-                   image: target image
-                   image_mask: target image mask
-                   noise: default is None, generate automaticly
-                   ref_prompt: list of list of text
-                   prompt: list of text
-                   **kwargs:
-               Returns:
-               '''
-        assert check_list_of_list(src_image_list) and check_list_of_list(src_mask_list)
+           Args:
+               src_image: list of list of src_image
+               src_image_mask: list of list of src_image_mask
+               image: target image
+               image_mask: target image mask
+               noise: default is None, generate automaticly
+               ref_prompt: list of list of text
+               prompt: list of text
+               **kwargs:
+           Returns:
+        '''
+        assert check_list_of_list(src_image_list) and check_list_of_list(
+            src_mask_list)
         assert self.cond_stage_model is not None
 
         gc_seg = kwargs.pop("gc_seg", [])
@@ -263,7 +283,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         # process image mask
 
         context['x_mask'] = x_mask
-        ref_edit_context = self.parse_ref_and_edit(src_image_list, src_mask_list, context, edit_id)
+        ref_edit_context = self.parse_ref_and_edit(src_image_list, modify_image_list, src_mask_list, context, edit_id)
         context.update(ref_edit_context)
 
         teacher_context = copy.deepcopy(context)
@@ -284,6 +304,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
     @torch.no_grad()
     def forward_test(self,
                      src_image_list=[],
+                     modify_image_list=[],
                      src_mask_list=[],
                      edit_id=[],
                      image=None,
@@ -300,6 +321,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         outputs = self.forward_editing(
             src_image_list=src_image_list,
             src_mask_list=src_mask_list,
+            modify_image_list=modify_image_list,
             edit_id=edit_id,
             image=image,
             image_mask=image_mask,
@@ -318,6 +340,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
     @torch.no_grad()
     def forward_editing(self,
                         src_image_list=[],
+                        modify_image_list=None,
                         src_mask_list=[],
                         edit_id=[],
                         image=None,
@@ -331,8 +354,8 @@ class LatentDiffusionACEPlus(LatentDiffusion):
                         **kwargs
                         ):
         # gc_seg is unused
-        prompt, image, image_mask, src_image, src_image_mask, edit_id = limit_batch_data(
-            [prompt, image, image_mask, src_image_list, src_mask_list, edit_id], log_num)
+        prompt, image, image_mask, src_image, modify_image,  src_image_mask, edit_id = limit_batch_data(
+            [prompt, image, image_mask, src_image_list, modify_image_list, src_mask_list, edit_id], log_num)
         assert check_list_of_list(src_image) and check_list_of_list(src_image_mask)
         assert self.cond_stage_model is not None
         align = kwargs.pop("align", [])
@@ -361,7 +384,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         image_mask = to_device(image_mask, strict=False)
         x_mask = [self.reshape_func(i).squeeze(0) for i in image_mask]
         context['x_mask'] = x_mask
-        ref_edit_context = self.parse_ref_and_edit(src_image, src_image_mask, context, edit_id)
+        ref_edit_context = self.parse_ref_and_edit(src_image, modify_image, src_image_mask, context, edit_id)
         context.update(ref_edit_context)
         # UNet use input n_prompt
         # model = self.model_ema if self.use_ema and self.eval_ema else self.model
@@ -388,13 +411,17 @@ class LatentDiffusionACEPlus(LatentDiffusion):
         for i in range(len(prompt)):
             rec_img = torch.clamp((x_samples[i].float() + 1.0) / 2.0, min=0.0, max=1.0)
             rec_img = rec_img.squeeze(0)
-            edit_imgs, edit_img_masks = [], []
+            edit_imgs, modify_imgs, edit_img_masks = [], [], []
             if src_image is not None and src_image[i] is not None:
                 if src_image_mask[i] is None:
                     src_image_mask[i] = [None] * len(src_image[i])
-                for edit_img, edit_mask in zip(src_image[i], src_image_mask[i]):
+                for edit_img, modify_img, edit_mask in zip(src_image[i],  modify_image_list[i], src_image_mask[i]):
                     edit_img = torch.clamp((edit_img.float() + 1.0) / 2.0, min=0.0, max=1.0)
                     edit_imgs.append(edit_img.squeeze(0))
+                    modify_img = torch.clamp((modify_img.float() + 1.0) / 2.0,
+                                           min=0.0,
+                                           max=1.0)
+                    modify_imgs.append(modify_img.squeeze(0))
                     if edit_mask is None:
                         edit_mask = torch.ones_like(edit_img[[0], :, :])
                     edit_img_masks.append(edit_mask)
@@ -402,6 +429,7 @@ class LatentDiffusionACEPlus(LatentDiffusion):
                 'reconstruct_image': rec_img,
                 'instruction': prompt[i],
                 'edit_image': edit_imgs if len(edit_imgs) > 0 else None,
+                'modify_image': modify_imgs if len(modify_imgs) > 0 else None,
                 'edit_mask': edit_img_masks if len(edit_imgs) > 0 else None
             }
             if image is not None:

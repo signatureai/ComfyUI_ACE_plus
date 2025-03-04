@@ -9,11 +9,12 @@ from scepter.modules.utils.distribute import we
 from scepter.modules.utils.probe import ProbeData
 from tqdm import tqdm
 @SOLVERS.register_class()
-class ACEPlusSolver(LatentDiffusionSolver):
+class FormalACEPlusSolver(LatentDiffusionSolver):
     def __init__(self, cfg, logger=None):
         super().__init__(cfg, logger=logger)
         self.probe_prompt = cfg.get("PROBE_PROMPT", None)
         self.probe_hw = cfg.get("PROBE_HW", [])
+
     @torch.no_grad()
     def run_eval(self):
         self.eval_mode()
@@ -75,11 +76,24 @@ class ACEPlusSolver(LatentDiffusionSolver):
 
         self.after_all_iter(self.hooks_dict[self._mode])
 
+    def run_step_val(self, batch_data, batch_idx=0, step=None, rank=None):
+        sample_id_list = batch_data['sample_id']
+        loss_dict = {}
+        with torch.autocast(device_type='cuda',
+                            enabled=self.use_amp,
+                            dtype=self.dtype):
+            results = self.model.forward_train(**batch_data)
+            loss = results['loss']
+        for sample_id in sample_id_list:
+            loss_dict[sample_id] = loss.detach().cpu().numpy()
+        return loss_dict
+
     def save_results(self, results):
         log_data, log_label = [], []
         for result in results:
             ret_images, ret_labels = [], []
             edit_image = result.get('edit_image', None)
+            modify_image = result.get('modify_image', None)
             edit_mask = result.get('edit_mask', None)
             if edit_image is not None:
                 for i, edit_img in enumerate(result['edit_image']):
@@ -87,6 +101,8 @@ class ACEPlusSolver(LatentDiffusionSolver):
                         continue
                     ret_images.append((edit_img.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8))
                     ret_labels.append(f'edit_image{i}; ')
+                    ret_images.append((modify_image[i].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8))
+                    ret_labels.append(f'modify_image{i}; ')
                     if edit_mask is not None:
                         ret_images.append((edit_mask[i].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8))
                         ret_labels.append(f'edit_mask{i}; ')
@@ -143,6 +159,7 @@ class ACEPlusSolver(LatentDiffusionSolver):
                             "image": [torch.zeros(3, self.probe_hw[0], self.probe_hw[1])],
                             "image_mask": [torch.ones(1, self.probe_hw[0], self.probe_hw[1])],
                             "src_image_list": [[]],
+                            "modify_image_list": [[]],
                             "src_mask_list": [[]],
                             "edit_id": [[]],
                             "height": self.probe_hw[0],

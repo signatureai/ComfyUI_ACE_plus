@@ -53,9 +53,128 @@ expected to empower community developers to build even more interesting applicat
 - [x] **[2025.01.16]** Release the training code for lora.
 - [x] **[2025.02.15]** Collection of workflows in Comfyui.
 - [x] **[2025.02.15]** Release the config for fully fine-tuning.
-- [] **[ToDo]** Release a unified fft model for ACE++, support more image to image tasks.
+- [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks.
 
-## 🔥 Comfyui Workflows in community
+## 🔥The unified fft model for ACE++
+Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
+
+We found that there are conflicts between the repainting task and the editing task during the experimental process. This is because the edited image is concatenated with noise in the channel dimension, whereas the repainting task modifies the region using zero pixel values in the VAE's latent space. The editing task uses RGB pixel values in the modified region through the VAE's latent space, which is similar to the distribution of the non-modified part of the repainting task, making it a challenge for the model to distinguish between the two tasks.
+
+To address this issue, we introduced 64 additional channels in the channel dimension to differentiate between these two tasks. In these channels, we place the latent representation of the pixel space from the edited image, while keeping other channels consistent with the repainting task. This approach significantly enhances the model's adaptability to different tasks.
+
+One issue with this approach is that it changes the input channel number of the FLUX-Fill-Dev model from 384 to 448. The specific configuration can be referenced in the [configuration file](config/ace_plus_fft.yaml).
+
+### Examples
+<table><tbody>
+  <tr>
+    <td>Input Reference Image</td>
+    <td>Input Edit Image</td>
+    <td>Input Edit Mask</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Function</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
+    <td></td>
+    <td></td>
+    <td><img src="./assets/samples/portrait/human_1_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Maintain the facial features, A girl is wearing a neat police uniform and sporting a badge. She is smiling with a friendly and confident demeanor. The background is blurred, featuring a cartoon logo."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Character ID Consistency Generation"</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/samples/subject/subject_1.jpg" width="200"></td>
+    <td></td>
+    <td></td>    
+    <td><img src="./assets/samples/subject/subject_1_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Display the logo in a minimalist style printed in white on a matte black ceramic coffee mug, alongside a steaming cup of coffee on a cozy cafe table."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Subject Consistency Generation"</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_2_edit.jpg" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_2_m.webp" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_2_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"The item is put on the table."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Subject Consistency Editing"</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/samples/application/logo_paste/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/logo_paste/1_1_edit.png" width="200"></td>
+    <td><img src="./assets/samples/application/logo_paste/1_1_m.png" width="200"></td>
+    <td><img src="./assets/samples/application/logo_paste/1_1_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"The logo is printed on the headphones."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Subject Consistency Editing"</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/samples/application/try_on/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/try_on/1_1_edit.png" width="200"></td>
+    <td><img src="./assets/samples/application/try_on/1_1_m.png" width="200"></td>
+    <td><img src="./assets/samples/application/try_on/1_1_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"The woman dresses this skirt."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Try On"</td>
+  </tr>
+  <tr>
+    <td><img src="./assets/samples/application/movie_poster/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
+    <td><img src="./assets/samples/application/movie_poster/1_2_m.webp" width="200"></td>
+    <td><img src="./assets/samples/application/movie_poster/1_1_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"{image}, the man faces the camera."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Face swap"</td>
+  </tr>
+ <tr>
+    <td></td>
+    <td><img src="./assets/samples/application/sr/sr_tiger.png" width="200"></td>
+    <td><img src="./assets/samples/application/sr/sr_tiger_m.webp" width="200"></td>
+    <td><img src="./assets/samples/application/sr/sr_tiger_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"{image} features a close-up of a young, furry tiger cub on a rock. The tiger, which appears to be quite young, has distinctive orange, black, and white striped fur, typical of tigers. The cub's eyes have a bright and curious expression, and its ears are perked up, indicating alertness. The cub seems to be in the act of climbing or resting on the rock. The background is a blurred grassland with trees, but the focus is on the cub, which is vividly colored while the rest of the image is in grayscale, drawing attention to the tiger's details. The photo captures a moment in the wild, depicting the charming and tenacious nature of this young tiger, as well as its typical interaction with the environment."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Super-resolution"</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_1_orm.webp" width="200"></td>
+    <td><img src="./assets/samples/application/regional_editing/1_1_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"a blue hand"</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Regional Editing"</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
+    <td><img src="./assets/samples/application/photo_editing/1_1_rm.webp" width="200"></td>
+    <td><img src="./assets/samples/application/regional_editing/1_2_fft.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Mechanical  hands like a robot"</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Regional Editing"</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td><img src="./assets/samples/control/1_1_recolor.webp" width="200"></td>
+    <td><img src="./assets/samples/control/1_1_m.webp" width="200"></td>
+    <td><img src="./assets/samples/control/1_1_fft_recolor.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"{image} Beautiful female portrait, Robot with smooth White transparent carbon shell, rococo detailing, Natural lighting, Highly detailed, Cinematic, 4K."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Recolorizing"</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td><img src="./assets/samples/control/1_1_depth.webp" width="200"></td>
+    <td><img src="./assets/samples/control/1_1_m.webp" width="200"></td>
+    <td><img src="./assets/samples/control/1_1_fft_depth.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"{image} Beautiful female portrait, Robot with smooth White transparent carbon shell, rococo detailing, Natural lighting, Highly detailed, Cinematic, 4K."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Depth Guided Generation"</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td><img src="./assets/samples/control/1_1_contourc.webp" width="200"></td>
+    <td><img src="./assets/samples/control/1_1_m.webp" width="200"></td>
+    <td><img src="./assets/samples/control/1_1_fft_contour.webp" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"{image} Beautiful female portrait, Robot with smooth White transparent carbon shell, rococo detailing, Natural lighting, Highly detailed, Cinematic, 4K."</td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Contour Guided Generation"</td>
+  </tr>
+</tbody>
+</table>
+
+
+##  Comfyui Workflows in community
 We are deeply grateful to the community developers for building many fascinating applications based on the ACE++ series of models. 
 During this process, we have received valuable feedback, particularly regarding artifacts in generated images and the stability of the results. 
 In response to these issues, many developers have proposed creative solutions, which have greatly inspired us, and we pay tribute to them. 
@@ -230,9 +349,6 @@ Models' scepter_path:
 - **ModelScope:** ms://iic/ACE_Plus@local_editing/xxxx.safetensors
 - **HuggingFace:** hf://ali-vilab/ACE_Plus@local_editing/xxxx.safetensors
 
-### ACE++ Fully [Coming soon] 
-Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
-
 ##  🔥 Applications
 The ACE++ model supports a wide range of downstream tasks through simple adaptations. Here are some examples, and we look forward to seeing the community explore even more exciting applications utilizing the ACE++ model.
 
@@ -302,7 +418,7 @@ For model preparation, we provide three methods for downloading the model. The s
 
 ## 🚀 Inference
 Under the condition that the environment variables defined in [Installation](#-installation), users can run examples and test your own samples by executing infer.py. 
-The relevant commands are as follows:
+The relevant commands for lora models are as follows:
 ```bash
 export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
 export PORTRAIT_MODEL_PATH="ms://iic/ACE_Plus@portrait/comfyui_portrait_lora64.safetensors"                                                                                                                                      
@@ -312,7 +428,13 @@ export LOCAL_MODEL_PATH="ms://iic/ACE_Plus@local_editing/comfyui_local_lora16.sa
 # export PORTRAIT_MODEL_PATH="hf://ali-vilab/ACE_Plus@portrait/comfyui_portrait_lora64.safetensors"        
 # export SUBJECT_MODEL_PATH="hf://ali-vilab/ACE_Plus@subject/comfyui_subject_lora16.safetensors"        
 # export LOCAL_MODEL_PATH="hf://ali-vilab/ACE_Plus@local_editing/comfyui_local_lora16.safetensors" 
-python infer.py
+python infer_lora.py
+```
+The relevant commands for fft models are as follows:
+```bash
+export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
+export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"                                                                                                                                      
+python infer_fft.py
 ```
 
 ## 🚀 Train
@@ -332,6 +454,10 @@ All parameters related to training are stored in 'train_config/ace_plus_lora.yam
 ```bash
 export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
 python run_train.py  --cfg train_config/ace_plus_lora.yaml
+# Training from fft model
+export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
+export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"       
+python run_train.py  --cfg train_config/ace_plus_fft.yaml 
 ```
 
 The models trained by ACE++ can be found in ./examples/exp_example/xxxx/checkpoints/xxxx/0_SwiftLoRA/comfyui_model.safetensors.
@@ -348,7 +474,11 @@ export LOCAL_MODEL_PATH="ms://iic/ACE_Plus@local_editing/comfyui_local_lora16.sa
 # export PORTRAIT_MODEL_PATH="hf://ali-vilab/ACE_Plus@portrait/comfyui_portrait_lora64.safetensors"        
 # export SUBJECT_MODEL_PATH="hf://ali-vilab/ACE_Plus@subject/comfyui_subject_lora16.safetensors"        
 # export LOCAL_MODEL_PATH="hf://ali-vilab/ACE_Plus@local_editing/comfyui_local_lora16.safetensors" 
-python demo.py
+python demo_lora.py
+# Use the fft model
+export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
+export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"       
+python demo_fft.py
 ```
 
 ## 📚 Limitations

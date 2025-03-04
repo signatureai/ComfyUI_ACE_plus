@@ -3,7 +3,7 @@ ENV:
   SEED: 1999
 SOLVER:
   # NAME DESCRIPTION:  TYPE:  default: 'LatentUfitSolver'
-  NAME: ACEPlusSolver
+  NAME: FormalACEPlusSolver
   # MAX_STEPS DESCRIPTION: The total steps for training. TYPE: int default: 100000
   MAX_STEPS: 100000
   # USE_AMP DESCRIPTION: Use amp to surpport mix precision or not, default is False. TYPE: bool default: False
