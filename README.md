@@ -435,7 +435,9 @@ python infer_lora.py
 The relevant commands for fft models are as follows:
 ```bash
 export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
-export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"                                                                                                                                      
+export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"
+# Use the model from huggingface
+# export "ACE_PLUS_FFT_MODEL=hf://ali-vilab/ACE_Plus@ace_plus_fft.safetensors"
 python infer_fft.py
 ```
 
