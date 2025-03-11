@@ -1,7 +1,5 @@
 <p align="center">
 
-
-
   <h2 align="center"><img src="assets/figures/icon.png" height=16> ++: Instruction-Based Image Creation and Editing <br> via Context-Aware Content Filling </h2>
 
   <p align="center">
@@ -41,13 +39,11 @@
 
 The original intention behind the design of ACE++ was to unify reference image generation, local editing, 
 and controllable generation into a single framework, and to enable one model to adapt to a wider range of tasks. 
-A more versatile model is often capable of handling more complex tasks. We have already released three LoRA models, 
-focusing on portraits, objects, and regional editing, with the expectation that each would demonstrate strong adaptability 
-within their respective domains. Undoubtedly, this presents certain challenges. 
-
-We are currently training a fully fine-tuned model, which has now entered the final stage of quality tuning. 
-We are confident it will be released soon. This model will support a broader range of capabilities and is 
-expected to empower community developers to build even more interesting applications.
+A more versatile model is often capable of handling more complex tasks. "We have released three LoRA models for 
+specific vertical domains and a more versatile FFT model. Users can flexibly utilize these models and their 
+combinations for their own scenarios. Furthermore, many community members have found that using them 
+in conjunction with Redux modules significantly improves performance. We believe there are many more 
+use cases to explore.
 
 ## 📢 News
 - [x] **[2025.01.06]** Release the code and models of ACE++.
@@ -55,7 +51,22 @@ expected to empower community developers to build even more interesting applicat
 - [x] **[2025.01.16]** Release the training code for lora.
 - [x] **[2025.02.15]** Collection of workflows in Comfyui.
 - [x] **[2025.02.15]** Release the config for fully fine-tuning.
-- [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks. [HuggingFace](https://huggingface.co/ali-vilab/ACE_Plus/tree/main)
+- [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks.
+- [x] **[2025.03.11]** Release the comfyui workflow and the fp8 
+version stored in [ms](https://www.modelscope.cn/models/iic/ACE_Plus/file/view/master?fileName=ace_plus_fft_fp8.safetensors&status=2) and [hf](https://huggingface.co/ali-vilab/ACE_Plus/blob/main/ace_plus_fft_fp8.safetensors) for ACE++ FFT model. 
+
+- We sincerely apologize 
+for the delayed responses and updates regarding ACE++ issues. 
+Further development of the ACE model through post-training on the FLUX model must be suspended. 
+We have identified several significant challenges in post-training on the FLUX foundation. 
+The primary issue is the high degree of heterogeneity between the training dataset and the FLUX model, 
+which results in highly unstable training. Moreover, FLUX-Dev is a distilled model, and the influence of its original negative prompts on its final performance is uncertain.
+As a result, subsequent efforts will be focused on post-training the ACE model using the Wan series of foundational models.
+
+- We have been busy with other projects recently. Our new work in the video domain, [VACE](https://ali-vilab.github.io/VACE-Page/), 
+has also been released, and we welcome you to continue following our work.
+
+
 
 ## 🔥The unified fft model for ACE++
 Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
@@ -65,6 +76,42 @@ We found that there are conflicts between the repainting task and the editing ta
 To address this issue, we introduced 64 additional channels in the channel dimension to differentiate between these two tasks. In these channels, we place the latent representation of the pixel space from the edited image, while keeping other channels consistent with the repainting task. This approach significantly enhances the model's adaptability to different tasks.
 
 One issue with this approach is that it changes the input channel number of the FLUX-Fill-Dev model from 384 to 448. The specific configuration can be referenced in the [configuration file](config/ace_plus_fft.yaml).
+
+
+We used tools from [stella](https://gist.github.com/Stella2211/10f5bd870387ec1ddb9932235321068e)(this is really a great work) to convert the fft-fp16 model to fft-fp8. The updated models are available on [ms](https://www.modelscope.cn/models/iic/ACE_Plus/file/view/master?fileName=ace_plus_fft_fp8.safetensors&status=2) and [hf](https://huggingface.co/ali-vilab/ACE_Plus/blob/main/ace_plus_fft_fp8.safetensors). The results of the fp8 model will differ from the fp16 model. We have not yet performed a rigorous comparison, so users should be aware of this.
+
+### ComfyUI Workflow
+
+Copy the workflow/ComfyUI-ACE_Plus folder into ComfyUI’s custom_nodes directory. Launch ComfyUI, and we have provided four example workflows in workflow_example_fft with the following explanations.
+
+We provide a parameter to adjust the GPU memory usage. As shown in the figure below, max_seq_length controls the length of the token sequence during inference, thereby controlling the model's inference memory consumption. The range of this value is from 1024 to 5120, and it correspondingly affects the clarity of the generated image. The smaller the value, the lower the image clarity.
+
+<img src="./assets/comfyui/snapshot.jpg" width="800">
+
+<table><tbody>
+  <tr>
+    <td>Workflow</td>
+    <td>Description</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_no_preprocess.json</td>
+    <td>Use the preprocessed images, such as depth and contour, as input, or the super-resolution.</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_controlpreprocess.json</td>
+    <td>Controllable image-to-image translation capability.</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_reference_generation.json</td>
+    <td>Reference image generation capability for portrait or subject.</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_referenceediting_generation.json</td>
+    <td>Reference image editing capability</td>
+  </tr>
+ <tbody>
+<table>
+
 
 ### Examples
 <table><tbody>
@@ -270,10 +317,6 @@ Additionally, many bloggers have published tutorials on how to use it, which are
 </table>
 
 
-##  🔥 ACE Models
-ACE++ provides a comprehensive toolkit for image editing and generation to support various applications. We encourage developers to choose the appropriate model based on their own scenarios and to fine-tune their models using data from their specific scenarios to achieve more stable results.  
-
-
 
 
 ### ACE++ Portrait
@@ -435,9 +478,7 @@ python infer_lora.py
 The relevant commands for fft models are as follows:
 ```bash
 export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
-export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"
-# Use the model from huggingface
-# export "ACE_PLUS_FFT_MODEL=hf://ali-vilab/ACE_Plus@ace_plus_fft.safetensors"
+export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"                                                                                                                                      
 python infer_fft.py
 ```
 
@@ -456,11 +497,11 @@ The required fields include the following six, with their explanations as follow
 All parameters related to training are stored in 'train_config/ace_plus_lora.yaml'. To run the training code, execute the following command.
 
 ```bash
-export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
+export FLUX_FILL_PATH="{path to FLUX.1-Fill-dev}"
 python run_train.py  --cfg train_config/ace_plus_lora.yaml
 # Training from fft model
-export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
-export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"       
+export FLUX_FILL_PATH="{path to FLUX.1-Fill-dev}"
+export ACE_PLUS_FFT_MODEL="path to ace_plus_fft.safetensors.safetensors"       
 python run_train.py  --cfg train_config/ace_plus_fft.yaml 
 ```
 
