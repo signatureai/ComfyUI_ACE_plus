@@ -234,11 +234,11 @@ class ACEPlusDataset(BaseDataset):
 
         # limit max sequence length
         image = ensure_limit_sequence(image, max_seq_len = self.max_seq_len,
-                                      d = self.d, interpolation=InterpolationMode.BILINEAR)
+                                      d = self.d, interpolation=InterpolationMode.NEAREST_EXACT)
         image_mask = ensure_limit_sequence(image_mask, max_seq_len = self.max_seq_len,
                                       d = self.d, interpolation=InterpolationMode.NEAREST_EXACT)
         src_image_list = [ensure_limit_sequence(i, max_seq_len = self.max_seq_len,
-                                      d = self.d, interpolation=InterpolationMode.BILINEAR) for i in src_image_list]
+                                      d = self.d, interpolation=InterpolationMode.NEAREST_EXACT) for i in src_image_list]
         src_mask_list = [ensure_limit_sequence(i, max_seq_len = self.max_seq_len,
                                       d = self.d, interpolation=InterpolationMode.NEAREST_EXACT) for i in src_mask_list]
 
