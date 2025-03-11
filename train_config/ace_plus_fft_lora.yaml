@@ -79,7 +79,7 @@ SOLVER:
     #
     DIFFUSION_MODEL:
       # NAME DESCRIPTION:  TYPE:  default: 'Flux'
-      NAME: FluxMRACEPlus
+      NAME: FluxMRModiACEPlus
       PRETRAINED_MODEL: ${ACE_PLUS_FFT_MODEL}
       # IN_CHANNELS DESCRIPTION: model's input channels. TYPE: int default: 64
       IN_CHANNELS: 448
