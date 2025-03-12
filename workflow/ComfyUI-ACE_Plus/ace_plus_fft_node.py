@@ -9,11 +9,10 @@ try:
     from scepter.modules.utils.config import Config
 
     fs_list = [
-        Config(cfg_dict={"NAME": "HuggingfaceFs", "TEMP_DIR": os.environ["TEMP_DIR"]}, load=False),
-        Config(cfg_dict={"NAME": "ModelscopeFs", "TEMP_DIR": os.environ["TEMP_DIR"]}, load=False),
-        Config(cfg_dict={"NAME": "HttpFs", "TEMP_DIR": os.environ["TEMP_DIR"]}, load=False),
-        Config(cfg_dict={"NAME": "LocalFs", "TEMP_DIR": os.environ["TEMP_DIR"]}, load=False),
-        Config(cfg_dict={"NAME": "LocalFs", "TEMP_DIR": os.environ["TEMP_DIR"]}, load=False)
+        Config(cfg_dict={"NAME": "HuggingfaceFs", "TEMP_DIR": "./"}, load=False),
+        Config(cfg_dict={"NAME": "ModelscopeFs", "TEMP_DIR": "./"}, load=False),
+        Config(cfg_dict={"NAME": "HttpFs", "TEMP_DIR": "./"}, load=False),
+        Config(cfg_dict={"NAME": "LocalFs", "TEMP_DIR": "./"}, load=False)
     ]
 
     for one_fs in fs_list:
