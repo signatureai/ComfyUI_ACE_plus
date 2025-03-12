@@ -3,9 +3,8 @@
 import folder_paths, os
 from comfy.supported_models import FluxInpaint, models
 from nodes import UNETLoader
-from scepter.modules.utils.file_system import FS
-
 try:
+    from scepter.modules.utils.file_system import FS
     from scepter.modules.annotator.registry import ANNOTATORS
     from scepter.modules.utils.config import Config
 
