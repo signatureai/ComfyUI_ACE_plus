@@ -63,6 +63,10 @@ The primary issue is the high degree of heterogeneity between the training datas
 which results in highly unstable training. Moreover, FLUX-Dev is a distilled model, and the influence of its original negative prompts on its final performance is uncertain.
 As a result, subsequent efforts will be focused on post-training the ACE model using the Wan series of foundational models.
 
+- I would like to emphasize that, due to the reasons mentioned earlier, the performance of the FFT model may decline compared 
+to the LoRA model across various tasks. Therefore, we recommend continuing to use the LoRA model to achieve better results. 
+We provide the FFT model with the hope that it may facilitate academic exploration and research in this area.
+
 - We have been busy with other projects recently. Our new work in the video domain, [VACE](https://ali-vilab.github.io/VACE-Page/), 
 has also been released, and we welcome you to continue following our work.
 
