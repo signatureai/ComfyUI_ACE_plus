@@ -465,7 +465,7 @@ git clone https://github.com/ali-vilab/ACE_plus.git
 Install the necessary packages with `pip`: 
 ```bash
 cd ACE_plus
-pip install -r requirements.txt
+pip install -r repo_requirements.txt
 ```
 ACE++ depends on FLUX.1-Fill-dev as its base model, which you can download from [![HuggingFace link](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev). 
 In order to run the inference code or Gradio demo normally, we have defined the relevant environment variables to specify the location of the model. 
