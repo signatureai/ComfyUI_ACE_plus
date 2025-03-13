@@ -99,7 +99,13 @@ We provide a parameter to adjust the GPU memory usage. As shown in the figure be
   </tr>
   <tr>
     <td>ACE_Plus_FFT_workflow_controlpreprocess.json</td>
-    <td>Controllable image-to-image translation capability.</td>
+    <td>Controllable image-to-image translation capability. To preprocess depth and contour information from images, 
+    we use externally-provided models that are typically downloaded from the ModelScope Hub. Because download success 
+    can vary depending on the user's environment, we offer alternatives: users can either leverage existing community 
+    nodes (depth extration node or contour extraction node) for this task (then choosing the 'no_preprocess' option), 
+    or users can pre-download the required models and adjust
+    the configuration file 'workflow/ComfyUI-ACE_Plus/config/ace_plus_fft_processor.yaml' to
+    specify the models' local paths.</td>
   </tr>
   <tr>
     <td>ACE_Plus_FFT_workflow_reference_generation.json</td>
