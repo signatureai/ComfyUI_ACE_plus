@@ -92,10 +92,12 @@ We provide a parameter to adjust the GPU memory usage. As shown in the figure be
   <tr>
     <td>Workflow</td>
     <td>Description</td>
+    <td>Setting</td>
   </tr>
   <tr>
     <td>ACE_Plus_FFT_workflow_no_preprocess.json</td>
     <td>Use the preprocessed images, such as depth and contour, as input, or the super-resolution.</td>
+    <td>Task_type: no_preprocess (you don't need to install dependencies like scepter)</td>
   </tr>
   <tr>
     <td>ACE_Plus_FFT_workflow_controlpreprocess.json</td>
@@ -109,14 +111,17 @@ We provide a parameter to adjust the GPU memory usage. As shown in the figure be
     and adjust
     the configuration file 'workflow/ComfyUI-ACE_Plus/config/ace_plus_fft_processor.yaml' to
     specify the models' local paths.</td>
+    <td>Task_type: contour_repainting/depth_repainting/recolorizing (you need to install dependencies like scepter)</td>
   </tr>
   <tr>
     <td>ACE_Plus_FFT_workflow_reference_generation.json</td>
     <td>Reference image generation capability for portrait or subject.</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
   </tr>
   <tr>
     <td>ACE_Plus_FFT_workflow_referenceediting_generation.json</td>
     <td>Reference image editing capability</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
   </tr>
  <tbody>
 <table>
