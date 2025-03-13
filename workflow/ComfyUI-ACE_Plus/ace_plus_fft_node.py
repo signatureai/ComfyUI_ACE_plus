@@ -141,8 +141,9 @@ class AcePlusFFTProcessor:
         self.max_aspect_ratio = max_aspect_ratio
         self.max_seq_len = max_seq_len
         self.d = d
-        self.processor_cfg = self.load_yaml(os.path.join('custom_nodes/ComfyUI-ACE_Plus/',
-                                                         'config/ace_plus_fft_processor.yaml'))
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(current_dir, 'config', 'ace_plus_fft_processor.yaml')
+        self.processor_cfg = self.load_yaml(config_path)
         self.task_list = {}
         for task in self.processor_cfg['PREPROCESSOR']:
             self.task_list[task['TYPE']] = task
