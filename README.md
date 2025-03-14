@@ -68,6 +68,7 @@ As a result, subsequent efforts will be focused on post-training the ACE model u
 to the LoRA model across various tasks. Therefore, we recommend continuing to use the LoRA model to achieve better results. 
 We provide the FFT model with the hope that it may facilitate academic exploration and research in this area.__
 
+
 - We have been busy with other projects recently. Our new work in the video domain, [VACE](https://ali-vilab.github.io/VACE-Page/), 
 has also been released, and we welcome you to continue following our work.
 
