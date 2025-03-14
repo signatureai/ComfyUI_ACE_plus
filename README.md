@@ -52,8 +52,7 @@ use cases to explore.
 - [x] **[2025.02.15]** Collection of workflows in Comfyui.
 - [x] **[2025.02.15]** Release the config for fully fine-tuning.
 - [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks.
-- [x] **[2025.03.11]** Release the comfyui workflow and the fp8 
-version stored in [ms](https://www.modelscope.cn/models/iic/ACE_Plus/file/view/master?fileName=ace_plus_fft_fp8.safetensors&status=2) and [hf](https://huggingface.co/ali-vilab/ACE_Plus/blob/main/ace_plus_fft_fp8.safetensors) for ACE++ FFT model. 
+- [x] **[2025.03.11]** Release the comfyui workflow for ACE++ FFT model. 
 
 - We sincerely apologize 
 for the delayed responses and updates regarding ACE++ issues. 
@@ -82,13 +81,15 @@ To address this issue, we introduced 64 additional channels in the channel dimen
 One issue with this approach is that it changes the input channel number of the FLUX-Fill-Dev model from 384 to 448. The specific configuration can be referenced in the [configuration file](config/ace_plus_fft.yaml).
 
 
-We used tools from [stella](https://gist.github.com/Stella2211/10f5bd870387ec1ddb9932235321068e)(this is really a great work) to convert the fft-fp16 model to fft-fp8. The updated models are available on [ms](https://www.modelscope.cn/models/iic/ACE_Plus/file/view/master?fileName=ace_plus_fft_fp8.safetensors&status=2) and [hf](https://huggingface.co/ali-vilab/ACE_Plus/blob/main/ace_plus_fft_fp8.safetensors). The results of the fp8 model will differ from the fp16 model. We have not yet performed a rigorous comparison, so users should be aware of this.
+We used tools from [stella](https://gist.github.com/Stella2211/10f5bd870387ec1ddb9932235321068e) to convert the fft-fp16 model to fft-fp8. 
+But We have tested with some users and found that the FP8 version has precision loss, so we will not provide the FP8 version of the model for the time being.
 
 ### ComfyUI Workflow
 
 Copy the workflow/ComfyUI-ACE_Plus folder into ComfyUI’s custom_nodes directory. Launch ComfyUI, and we have provided four example workflows in workflow_example_fft with the following explanations.
 
-We provide a parameter to adjust the GPU memory usage. As shown in the figure below, max_seq_length controls the length of the token sequence during inference, thereby controlling the model's inference memory consumption. The range of this value is from 1024 to 5120, and it correspondingly affects the clarity of the generated image. The smaller the value, the lower the image clarity.
+We provide a parameter to adjust the GPU memory usage. As shown in the figure below, max_seq_length controls the length of the token sequence during inference, thereby controlling the model's inference memory consumption. 
+The range of this value is from 1024 to 5120, and it correspondingly affects the clarity of the generated image. The smaller the value, the lower the image clarity.
 
 <img src="./assets/comfyui/snapshot.jpg" width="800">
 
@@ -469,7 +470,7 @@ git clone https://github.com/ali-vilab/ACE_plus.git
 Install the necessary packages with `pip`: 
 ```bash
 cd ACE_plus
-pip install -r repo_requirements.txt
+pip install -r requirements.txt
 ```
 ACE++ depends on FLUX.1-Fill-dev as its base model, which you can download from [![HuggingFace link](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev). 
 In order to run the inference code or Gradio demo normally, we have defined the relevant environment variables to specify the location of the model. 
@@ -512,7 +513,17 @@ The required fields include the following six, with their explanations as follow
 "data_type": represents the type of data, which can be 'portrait', 'subject', or 'local'. This field is not used in training phase.
 ```
 
-All parameters related to training are stored in 'train_config/ace_plus_lora.yaml'. To run the training code, execute the following command.
+All parameters related to training are stored in 'train_config/ace_plus_lora.yaml'. With the following default configuration, the memory usage for LoRA training is between 38GB and 40GB. 
+
+| Hyperparameter | Value     | Description|
+|::|:---:|
+| ATTN_BACKEND |   flash_attn / pytorch  |Set 'flash_attn' to use flash_attn2(Make sure you have installed flash-attn2 correctly). If the version of PyTorch is greater than 2.4.0, use 'pytorch' to utilize PyTorch's implementation.|
+| USE_GRAD_CHECKPOINT |   True / False  |Using gradient checkpointing can also significantly reduce GPU memory usage, but it may slow down the training speed. |
+| MAX_SEQ_LEN |   2048  | The MAX_SEQ_LEN refers to the sequence size limit for a single input image (calculated as H/16 * W/16). 
+    A larger value indicates a longer computation sequence and a higher training resolution. The default value I provided is 2048.|
+
+To run the training code, execute the following command.
+
 
 ```bash
 export FLUX_FILL_PATH="{path to FLUX.1-Fill-dev}"
