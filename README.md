@@ -472,7 +472,7 @@ git clone https://github.com/ali-vilab/ACE_plus.git
 Install the necessary packages with `pip`: 
 ```bash
 cd ACE_plus
-pip install -r requirements.txt
+pip install -r repo_requirements.txt
 ```
 ACE++ depends on FLUX.1-Fill-dev as its base model, which you can download from [![HuggingFace link](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev). 
 In order to run the inference code or Gradio demo normally, we have defined the relevant environment variables to specify the location of the model. 
@@ -559,7 +559,6 @@ python demo_fft.py
 ## 📚 Limitations
 * For certain tasks, such as deleting and adding objects, there are flaws in instruction following. For adding and replacing objects, we recommend trying the repainting method of the local editing model to achieve this.
 * The generated results may contain artifacts, especially when it comes to the generation of hands, which still exhibit distortions.
-* The current version of ACE++ is still in the development stage. We are working on improving the model's performance and adding more features.
 
 ## 📝 Citation
 ACE++ is a post-training model based on the FLUX.1-dev series from black-forest-labs. Please adhere to its open-source license. The test materials used in ACE++ come from the internet and are intended for academic research and communication purposes. If the original creators feel uncomfortable, please contact us to have them removed. 
