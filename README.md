@@ -517,12 +517,11 @@ The required fields include the following six, with their explanations as follow
 
 All parameters related to training are stored in 'train_config/ace_plus_lora.yaml'. With the following default configuration, the memory usage for LoRA training is between 38GB and 40GB. 
 
-| Hyperparameter | Value     | Description|
-|::|:---:|
+| Hyperparameter | Value     | Description |
+| --- | --- | --- |
 | ATTN_BACKEND |   flash_attn / pytorch  |Set 'flash_attn' to use flash_attn2(Make sure you have installed flash-attn2 correctly). If the version of PyTorch is greater than 2.4.0, use 'pytorch' to utilize PyTorch's implementation.|
 | USE_GRAD_CHECKPOINT |   True / False  |Using gradient checkpointing can also significantly reduce GPU memory usage, but it may slow down the training speed. |
-| MAX_SEQ_LEN |   2048  | The MAX_SEQ_LEN refers to the sequence size limit for a single input image (calculated as H/16 * W/16). 
-    A larger value indicates a longer computation sequence and a higher training resolution. The default value I provided is 2048.|
+| MAX_SEQ_LEN |   2048  | The MAX_SEQ_LEN refers to the sequence size limit for a single input image (calculated as H/16 * W/16). A larger value indicates a longer computation sequence and a higher training resolution. The default value I provided is 2048.|
 
 To run the training code, execute the following command.
 

@@ -108,7 +108,10 @@ SOLVER:
       DEPTH: 19
       # DEPTH_SINGLE_BLOCKS DESCRIPTION: number of transformer blocks in the single stream block. TYPE: int default: 38
       DEPTH_SINGLE_BLOCKS: 38
+      # ATTN_BACKEND：setting 'flash_attn' to use flash_attn2, if the version of pytorch > 2.4.0, using 'pytorch' to use pytorch's implementation
       ATTN_BACKEND: flash_attn
+      # USE_GRAD_CHECKPOINT: setting gc to true can decrease the memory usage.
+      USE_GRAD_CHECKPOINT: True
 
     #
     FIRST_STAGE_MODEL:
