@@ -40,11 +40,9 @@
 The original intention behind the design of ACE++ was to unify reference image generation, local editing, 
 and controllable generation into a single framework, and to enable one model to adapt to a wider range of tasks. 
 A more versatile model is often capable of handling more complex tasks. We have released three LoRA models for 
-specific vertical domains and a more versatile FFT model (the performance of the FFT model may decline compared 
+specific vertical domains and a more versatile FFT model (the performance of the FFT model declines compared 
 to the LoRA model across various tasks). Users can flexibly utilize these models and their 
-combinations for their own scenarios. Furthermore, many community members have found that using them 
-in conjunction with Redux modules significantly improves performance. We believe there are many more 
-use cases to explore.
+combinations for their own scenarios. 
 
 ## 📢 News
 - [x] **[2025.01.06]** Release the code and models of ACE++.
@@ -52,8 +50,8 @@ use cases to explore.
 - [x] **[2025.01.16]** Release the training code for lora.
 - [x] **[2025.02.15]** Collection of workflows in Comfyui.
 - [x] **[2025.02.15]** Release the config for fully fine-tuning.
-- [x] **[2025.03.03]** Release a unified fft model for ACE++, support more image to image tasks.
-- [x] **[2025.03.11]** Release the comfyui workflow for ACE++ FFT model. 
+- [x] **[2025.03.03]** Release the fft model for ACE++, support more image to image tasks.
+- [x] **[2025.03.11]** Release some comfyui workflow examples for ACE++ model. 
 
 - We sincerely apologize 
 for the delayed responses and updates regarding ACE++ issues. 
@@ -61,82 +59,118 @@ Further development of the ACE model through post-training on the FLUX model mus
 We have identified several significant challenges in post-training on the FLUX foundation. 
 The primary issue is the high degree of heterogeneity between the training dataset and the FLUX model, 
 which results in highly unstable training. Moreover, FLUX-Dev is a distilled model, and the influence of its original negative prompts on its final performance is uncertain.
-As a result, subsequent efforts will be focused on post-training the ACE model using the Wan series of foundational models.
-
-
-- __I would like to emphasize that, due to the reasons mentioned earlier, the performance of the FFT model may decline compared 
+As a result, subsequent efforts will be focused on post-training the ACE model using the Wan series of foundational models. __Due to the reasons mentioned earlier, the performance of the FFT model may decline compared 
 to the LoRA model across various tasks. Therefore, we recommend continuing to use the LoRA model to achieve better results. 
 We provide the FFT model with the hope that it may facilitate academic exploration and research in this area.__
 
-- We have been busy with other projects recently. Our new work in the video domain, [VACE](https://ali-vilab.github.io/VACE-Page/), 
-has also been released, and we welcome you to continue following our work.
 
+## Models
 
+### ACE++ Portrait LoRA
 
-## 🔥The unified fft model for ACE++
-Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
+Portrait-consistent generation to maintain the consistency of the portrait.
 
-We found that there are conflicts between the repainting task and the editing task during the experimental process. This is because the edited image is concatenated with noise in the channel dimension, whereas the repainting task modifies the region using zero pixel values in the VAE's latent space. The editing task uses RGB pixel values in the modified region through the VAE's latent space, which is similar to the distribution of the non-modified part of the repainting task, making it a challenge for the model to distinguish between the two tasks.
-
-To address this issue, we introduced 64 additional channels in the channel dimension to differentiate between these two tasks. In these channels, we place the latent representation of the pixel space from the edited image, while keeping other channels consistent with the repainting task. This approach significantly enhances the model's adaptability to different tasks.
-
-One issue with this approach is that it changes the input channel number of the FLUX-Fill-Dev model from 384 to 448. The specific configuration can be referenced in the [configuration file](config/ace_plus_fft.yaml).
-
-
-We used tools from [stella](https://gist.github.com/Stella2211/10f5bd870387ec1ddb9932235321068e) to convert the fft-fp16 model to fft-fp8. 
-But We have tested with some users and found that the FP8 version has precision loss, so we will not provide the FP8 version of the model for the time being.
-
-### ComfyUI Workflow
-
-Copy the workflow/ComfyUI-ACE_Plus folder into ComfyUI’s custom_nodes directory. Launch ComfyUI, and we have provided four example workflows in workflow_example_fft with the following explanations.
-
-We provide a parameter to adjust the GPU memory usage. As shown in the figure below, max_seq_length controls the length of the token sequence during inference, thereby controlling the model's inference memory consumption. 
-The range of this value is from 1024 to 5120, and it correspondingly affects the clarity of the generated image. The smaller the value, the lower the image clarity.
-
-<img src="./assets/comfyui/snapshot.jpg" width="800">
 
 <table><tbody>
   <tr>
-    <td>Workflow</td>
-    <td>Description</td>
-    <td>Setting</td>
+    <td>Tuning Method</td>
+    <td>Input</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Models</td>
   </tr>
   <tr>
-    <td>ACE_Plus_FFT_workflow_no_preprocess.json</td>
-    <td>Use the preprocessed images, such as depth and contour, as input, or the super-resolution.</td>
-    <td>Task_type: no_preprocess (you don't need to install dependencies like scepter)</td>
+    <td>LoRA <br>+ ACE Data</td>
+    <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
+    <td><img src="./assets/samples/portrait/human_1_1.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Maintain the facial features. A girl is wearing a neat police uniform and sporting a badge. She is smiling with a friendly and confident demeanor. The background is blurred, featuring a cartoon logo."</td>
+    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/portrait/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
+  </tr>
+</tbody>
+</table>
+
+
+Models' scepter_path: 
+
+- **ModelScope:** ms://iic/ACE_Plus@portrait/xxxx.safetensors
+
+- **HuggingFace:** hf://ali-vilab/ACE_Plus@portrait/xxxx.safetensors
+
+
+
+### ACE++ Subject LoRA
+
+Subject-driven image generation task to maintain the consistency of a specific subject in different scenes.
+
+<table><tbody>
+  <tr>
+    <td>Tuning Method</td>
+    <td>Input</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Models</td>
   </tr>
   <tr>
-    <td>ACE_Plus_FFT_workflow_controlpreprocess.json</td>
-    <td>Controllable image-to-image translation capability. To preprocess depth and contour information from images, 
-    we use externally-provided models that are typically downloaded from the ModelScope Hub. Because download success 
-    can vary depending on the user's environment, we offer alternatives: users can either leverage existing community 
-    nodes (depth extration node or contour extraction node) for this task (then choosing the 'no_preprocess' option), 
-    or users can pre-download the required models 
-    <a href="https://www.modelscope.cn/models/iic/scepter_annotator/file/view/master?fileName=annotator%252Fckpts%252Finformative_drawing_contour_style.pth&status=2">contour</a> and
-    <a href="https://www.modelscope.cn/models/iic/scepter_annotator/file/view/master?fileName=annotator%252Fckpts%252Fdpt_hybrid-midas-501f0c75.pt&status=2">depth</a>    
-    and adjust
-    the configuration file 'workflow/ComfyUI-ACE_Plus/config/ace_plus_fft_processor.yaml' to
-    specify the models' local paths.</td>
-    <td>Task_type: contour_repainting/depth_repainting/recolorizing (you need to install dependencies like scepter)</td>
+    <td>LoRA <br>+ ACE Data</td>
+    <td><img src="./assets/samples/subject/subject_1.jpg" width="200"></td>
+    <td><img src="./assets/samples/subject/subject_1_1.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Display the logo in a minimalist style printed in white on a matte black ceramic coffee mug, alongside a steaming cup of coffee on a cozy cafe table."</td>
+    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/subject/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
+  </tr>
+</tbody>
+</table>
+
+
+Models' scepter_path: 
+
+- **ModelScope:** ms://iic/ACE_Plus@subject/xxxx.safetensors
+
+- **HuggingFace:** hf://ali-vilab/ACE_Plus@subject/xxxx.safetensors
+
+
+
+### ACE++ LocalEditing LoRA
+
+Redrawing the mask area of images while maintaining the original structural information of the edited area.
+
+<table><tbody>
+  <tr>
+    <td>Tuning Method</td>
+    <td>Input</td>
+    <td>Output</td>
+    <td>Instruction</td>
+    <td>Models</td>
   </tr>
   <tr>
-    <td>ACE_Plus_FFT_workflow_reference_generation.json</td>
-    <td>Reference image generation capability for portrait or subject.</td>
-    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+    <td>LoRA <br>+ ACE Data</td>
+    <td><img src="./assets/samples/local/local_1.webp" width="200"><br><img src="./assets/samples/local/local_1_m.webp" width="200"></td>
+    <td><img src="./assets/samples/local/local_1_1.jpg" width="200"></td>
+    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"By referencing the mask, restore a partial image from the doodle {image} that aligns with the textual explanation: "1 white old owl"."</td>
+    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/local_editing/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
   </tr>
-  <tr>
-    <td>ACE_Plus_FFT_workflow_referenceediting_generation.json</td>
-    <td>Reference image editing capability</td>
-    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
-  </tr>
- <tbody>
-<table>
+</tbody>
+
+</table>
+
+
+Models' scepter_path: 
+
+- **ModelScope:** ms://iic/ACE_Plus@local_editing/xxxx.safetensors
+
+- **HuggingFace:** hf://ali-vilab/ACE_Plus@local_editing/xxxx.safetensors
+
+### ACE++ FFT model  
+Fully finetuning a composite model with ACE’s data to support various editing and reference generation tasks through an instructive approach.
+
+We introduced 64 additional channels in the channel dimension to differentiate between the repainting task and the editing task. In these channels, we place the latent representation of the pixel space from the edited image, while keeping other channels consistent with the repainting task. One issue with this approach is that it changes the input channel number of the FLUX-Fill-Dev model from 384 to 448. The specific configuration can be referenced in the [configuration file](config/ace_plus_fft.yaml).
 
 
 ### Examples
+The ACE++ model supports a wide range of downstream tasks through simple adaptations. Here are some examples.
+
 <table><tbody>
   <tr>
+    <th align="center" colspan="1">ACE++ Model</th>
     <td>Input Reference Image</td>
     <td>Input Edit Image</td>
     <td>Input Edit Mask</td>
@@ -145,6 +179,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td>Function</td>
   </tr>
   <tr>
+    <td>Portrait LoRA(recommended) / FFT model</td>
     <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
     <td></td>
     <td></td>
@@ -153,14 +188,16 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Character ID Consistency Generation"</td>
   </tr>
   <tr>
+    <td>Subject LoRA(recommended) / FFT model</td>
     <td><img src="./assets/samples/subject/subject_1.jpg" width="200"></td>
     <td></td>
-    <td></td>    
+    <td></td>
     <td><img src="./assets/samples/subject/subject_1_fft.webp" width="200"></td>
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Display the logo in a minimalist style printed in white on a matte black ceramic coffee mug, alongside a steaming cup of coffee on a cozy cafe table."</td>
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Subject Consistency Generation"</td>
   </tr>
   <tr>
+    <td>Subject LoRA(recommended) / FFT model</td>
     <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
     <td><img src="./assets/samples/application/photo_editing/1_2_edit.jpg" width="200"></td>
     <td><img src="./assets/samples/application/photo_editing/1_2_m.webp" width="200"></td>
@@ -169,6 +206,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Subject Consistency Editing"</td>
   </tr>
   <tr>
+    <td>Subject LoRA(recommended) / FFT model</td>
     <td><img src="./assets/samples/application/logo_paste/1_ref.png" width="200"></td>
     <td><img src="./assets/samples/application/logo_paste/1_1_edit.png" width="200"></td>
     <td><img src="./assets/samples/application/logo_paste/1_1_m.png" width="200"></td>
@@ -177,6 +215,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Subject Consistency Editing"</td>
   </tr>
   <tr>
+    <td>Subject LoRA(recommended) / FFT model</td>
     <td><img src="./assets/samples/application/try_on/1_ref.png" width="200"></td>
     <td><img src="./assets/samples/application/try_on/1_1_edit.png" width="200"></td>
     <td><img src="./assets/samples/application/try_on/1_1_m.png" width="200"></td>
@@ -185,6 +224,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Try On"</td>
   </tr>
   <tr>
+    <td>Portrait LoRA(recommended) / FFT model</td>
     <td><img src="./assets/samples/application/movie_poster/1_ref.png" width="200"></td>
     <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
     <td><img src="./assets/samples/application/movie_poster/1_2_m.webp" width="200"></td>
@@ -193,6 +233,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Face swap"</td>
   </tr>
  <tr>
+    <td>FFT model</td>
     <td></td>
     <td><img src="./assets/samples/application/sr/sr_tiger.png" width="200"></td>
     <td><img src="./assets/samples/application/sr/sr_tiger_m.webp" width="200"></td>
@@ -201,6 +242,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Super-resolution"</td>
   </tr>
   <tr>
+    <td>FFT model</td>
     <td></td>
     <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
     <td><img src="./assets/samples/application/photo_editing/1_1_orm.webp" width="200"></td>
@@ -209,6 +251,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Regional Editing"</td>
   </tr>
   <tr>
+    <td>FFT model</td>
     <td></td>
     <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
     <td><img src="./assets/samples/application/photo_editing/1_1_rm.webp" width="200"></td>
@@ -217,6 +260,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Regional Editing"</td>
   </tr>
   <tr>
+    <td>Local Editing LoRA/FFT model</td>
     <td></td>
     <td><img src="./assets/samples/control/1_1_recolor.webp" width="200"></td>
     <td><img src="./assets/samples/control/1_1_m.webp" width="200"></td>
@@ -224,7 +268,9 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"{image} Beautiful female portrait, Robot with smooth White transparent carbon shell, rococo detailing, Natural lighting, Highly detailed, Cinematic, 4K."</td>
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Recolorizing"</td>
   </tr>
+
   <tr>
+    <td>Local Editing LoRA/FFT model</td>
     <td></td>
     <td><img src="./assets/samples/control/1_1_depth.webp" width="200"></td>
     <td><img src="./assets/samples/control/1_1_m.webp" width="200"></td>
@@ -233,6 +279,7 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
     <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Depth Guided Generation"</td>
   </tr>
   <tr>
+    <td>Local Editing LoRA/FFT model</td>
     <td></td>
     <td><img src="./assets/samples/control/1_1_contourc.webp" width="200"></td>
     <td><img src="./assets/samples/control/1_1_m.webp" width="200"></td>
@@ -242,7 +289,6 @@ The range of this value is from 1024 to 5120, and it correspondingly affects the
   </tr>
 </tbody>
 </table>
-
 
 ##  Comfyui Workflows in community
 We are deeply grateful to the community developers for building many fascinating applications based on the ACE++ series of models. 
@@ -337,131 +383,103 @@ Additionally, many bloggers have published tutorials on how to use it, which are
 </tbody>
 </table>
 
+## ComfyUI Workflow Examples
 
-
-
-### ACE++ Portrait
-Portrait-consistent generation to maintain the consistency of the portrait.
+Copy the workflow/ComfyUI-ACE_Plus folder into ComfyUI’s custom_nodes directory. Launch ComfyUI, and we have provided some example workflows in workflow_example with the following explanations. It is recommended to use the LoRA model workflow, as it offers more stable results compared to the FFT model.
 
 <table><tbody>
   <tr>
-    <td>Tuning Method</td>
-    <td>Input</td>
-    <td>Output</td>
-    <td>Instruction</td>
-    <td>Models</td>
+    <td>Workflow</td>
+    <td>Description</td>
+    <td>Other dependency models</td>
+    <td>Setting</td>
   </tr>
   <tr>
-    <td>LoRA <br>+ ACE Data</td>
-    <td><img src="./assets/samples/portrait/human_1.jpg" width="200"></td>
-    <td><img src="./assets/samples/portrait/human_1_1.jpg" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Maintain the facial features. A girl is wearing a neat police uniform and sporting a badge. She is smiling with a friendly and confident demeanor. The background is blurred, featuring a cartoon logo."</td>
-    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/portrait/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
+    <td>ACE_Plus_LoRA_workflow_reference_generation.json</td>
+    <td>Reference image generation capability for portrait or subject.</td>
+    <td>Potrait or subject LoRA Model + FLUX.1-Fill-dev</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
   </tr>
-</tbody>
-</table>
+  <tr>
+    <td>ACE_Plus_LoRA_workflow_redux_reference_generation.json</td>
+    <td>Reference image generation capability for portrait or subject used in conjunction with Redux.</td>
+    <td>Potrait or subject LoRA Model + FLUX.1-Fill-dev + FLUX.1-Redux</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_LoRA_workflow_reference_editing.json</td>
+    <td>Reference image editing capability such as logo paste, face swap.</td>
+    <td>Potrait or subject LoRA Model + FLUX.1-Fill-dev</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_LoRA_workflow_redux_reference_editing.json</td>
+    <td>Reference image editing capability such as logo paste, face swap used in conjunction with Redux.</td>
+    <td>Potrait or subject LoRA Model + FLUX.1-Fill-dev + FLUX.1-Redux</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_LoRA_workflow_localcontrol_generation.json</td>
+    <td>Controllable image-to-image translation capability. To preprocess depth and contour information from images, 
+    we use externally-provided models that are typically downloaded from the ModelScope Hub. Because download success 
+    can vary depending on the user's environment, we offer alternatives: users can either leverage existing community 
+    nodes (depth extration node or contour extraction node) for this task (then choosing the 'no_preprocess' option), 
+    or users can pre-download the required models 
+    <a href="https://www.modelscope.cn/models/iic/scepter_annotator/file/view/master?fileName=annotator%252Fckpts%252Finformative_drawing_contour_style.pth&status=2">contour</a> and
+    <a href="https://www.modelscope.cn/models/iic/scepter_annotator/file/view/master?fileName=annotator%252Fckpts%252Fdpt_hybrid-midas-501f0c75.pt&status=2">depth</a>    
+    and adjust
+    the configuration file 'workflow/ComfyUI-ACE_Plus/config/ace_plus_fft_processor.yaml' to
+    specify the models' local paths.</td>
+    <td>Local editing LoRA Model + FLUX.1-Fill-dev + Preprocessing model (depth or contour) </td>
+    <td>Task_type: contour_repainting/depth_repainting/recolorizing (you need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_referenceediting_generation.json</td>
+    <td>Reference image editing capability</td>
+    <td>FFT model</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_no_preprocess.json</td>
+    <td>Use the preprocessed images, such as depth and contour, as input, or the super-resolution.</td>
+    <td>FFT model</td>
+    <td>Task_type: no_preprocess (you don't need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_controlpreprocess.json</td>
+    <td>Controllable image-to-image translation capability. To preprocess depth and contour information from images, 
+    we use externally-provided models that are typically downloaded from the ModelScope Hub. Because download success 
+    can vary depending on the user's environment, we offer alternatives: users can either leverage existing community 
+    nodes (depth extration node or contour extraction node) for this task (then choosing the 'no_preprocess' option), 
+    or users can pre-download the required models 
+    <a href="https://www.modelscope.cn/models/iic/scepter_annotator/file/view/master?fileName=annotator%252Fckpts%252Finformative_drawing_contour_style.pth&status=2">contour</a> and
+    <a href="https://www.modelscope.cn/models/iic/scepter_annotator/file/view/master?fileName=annotator%252Fckpts%252Fdpt_hybrid-midas-501f0c75.pt&status=2">depth</a>    
+    and adjust
+    the configuration file 'workflow/ComfyUI-ACE_Plus/config/ace_plus_fft_processor.yaml' to
+    specify the models' local paths.</td>
+    <td>FFT model</td>
+    <td>Task_type: contour_repainting/depth_repainting/recolorizing (you need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_reference_generation.json</td>
+    <td>Reference image generation capability for portrait or subject.</td>
+    <td>FFT model</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+  </tr>
+  <tr>
+    <td>ACE_Plus_FFT_workflow_referenceediting_generation.json</td>
+    <td>Reference image editing capability</td>
+    <td>FFT model</td>
+    <td>Task_type: repainting (you don't need to install dependencies like scepter)</td>
+  </tr>
+ <tbody>
+<table>
 
-Models' scepter_path: 
-- **ModelScope:** ms://iic/ACE_Plus@portrait/xxxx.safetensors
-- **HuggingFace:** hf://ali-vilab/ACE_Plus@portrait/xxxx.safetensors
+As shown in the figure below, max_seq_length controls the length of the token sequence during inference, thereby controlling the model's inference memory consumption. 
+The range of this value is from 1024 to 5120, and it correspondingly affects the clarity of the generated image. The smaller the value, the lower the image clarity.
 
+<img src="./assets/comfyui/snapshot.jpg" width="200">
 
-### ACE++ Subject
-Subject-driven image generation task to maintain the consistency of a specific subject in different scenes.
-<table><tbody>
-  <tr>
-    <td>Tuning Method</td>
-    <td>Input</td>
-    <td>Output</td>
-    <td>Instruction</td>
-    <td>Models</td>
-  </tr>
-  <tr>
-    <td>LoRA <br>+ ACE Data</td>
-    <td><img src="./assets/samples/subject/subject_1.jpg" width="200"></td>
-    <td><img src="./assets/samples/subject/subject_1_1.jpg" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"Display the logo in a minimalist style printed in white on a matte black ceramic coffee mug, alongside a steaming cup of coffee on a cozy cafe table."</td>
-    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/subject/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
-  </tr>
-</tbody>
-</table>
-
-Models' scepter_path: 
-- **ModelScope:** ms://iic/ACE_Plus@subject/xxxx.safetensors
-- **HuggingFace:** hf://ali-vilab/ACE_Plus@subject/xxxx.safetensors
-
-
-### ACE++ LocalEditing
-Redrawing the mask area of images while maintaining the original structural information of the edited area.
-<table><tbody>
-  <tr>
-    <td>Tuning Method</td>
-    <td>Input</td>
-    <td>Output</td>
-    <td>Instruction</td>
-    <td>Models</td>
-  </tr>
-  <tr>
-    <td>LoRA <br>+ ACE Data</td>
-    <td><img src="./assets/samples/local/local_1.webp" width="200"><br><img src="./assets/samples/local/local_1_m.webp" width="200"></td>
-    <td><img src="./assets/samples/local/local_1_1.jpg" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="250px";>"By referencing the mask, restore a partial image from the doodle {image} that aligns with the textual explanation: "1 white old owl"."</td>
-    <td align="center" style="word-wrap:break-word;word-break:break-all;" width="200px";><a href="https://www.modelscope.cn/models/iic/ACE_Plus/"><img src="https://img.shields.io/badge/ModelScope-Model-blue" alt="ModelScope link"> </a> <a href="https://huggingface.co/ali-vilab/ACE_Plus/tree/main/local_editing/"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow" alt="HuggingFace link"> </a> </td>
-  </tr>
-</tbody>
-</table>
-
-Models' scepter_path: 
-- **ModelScope:** ms://iic/ACE_Plus@local_editing/xxxx.safetensors
-- **HuggingFace:** hf://ali-vilab/ACE_Plus@local_editing/xxxx.safetensors
-
-##  🔥 Applications
-The ACE++ model supports a wide range of downstream tasks through simple adaptations. Here are some examples, and we look forward to seeing the community explore even more exciting applications utilizing the ACE++ model.
-
-<table><tbody>
-  <tr>
-    <th align="center" colspan="1">Application</th>
-    <th align="center" colspan="1">ACE++ Model</th>
-    <th align="center" colspan="5">Examples</th>
-  </tr>
-  <tr>
-    <td>Try On</td>
-    <td>ACE++ Subject</td>
-    <td><img src="./assets/samples/application/try_on/1_ref.png" width="200"></td>
-    <td><img src="./assets/samples/application/try_on/1_1_edit.png" width="200"></td>
-    <td><img src="./assets/samples/application/try_on/1_1_m.png" width="200"></td>
-    <td><img src="./assets/samples/application/try_on/1_1_res.png" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The woman dresses this skirt."</td>
-  </tr>
-  <tr>
-    <td>Logo Paste</td>
-    <td>ACE++ Subject</td>
-    <td><img src="./assets/samples/application/logo_paste/1_ref.png" width="200"></td>
-    <td><img src="./assets/samples/application/logo_paste/1_1_edit.png" width="200"></td>
-    <td><img src="./assets/samples/application/logo_paste/1_1_m.png" width="200"></td>
-    <td><img src="./assets/samples/application/logo_paste/1_1_res.webp" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The logo is printed on the headphones."</td>
-  </tr>
-  <tr>
-    <td>Photo Editing</td>
-    <td>ACE++ Subject</td>
-    <td><img src="./assets/samples/application/photo_editing/1_ref.png" width="200"></td>
-    <td><img src="./assets/samples/application/photo_editing/1_1_edit.png" width="200"></td>
-    <td><img src="./assets/samples/application/photo_editing/1_1_m.png" width="200"></td>
-    <td><img src="./assets/samples/application/photo_editing/1_1_res.jpg" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The item is put on the ground."</td>
-  </tr>
-  <tr>
-    <td>Movie Poster Editor</td>
-    <td>ACE++ Portrait</td>
-    <td><img src="./assets/samples/application/movie_poster/1_ref.png" width="200"></td>
-    <td><img src="./assets/samples/application/movie_poster/1_1_edit.png" width="200"></td>
-    <td><img src="./assets/samples/application/movie_poster/1_1_m.png" width="200"></td>
-    <td><img src="./assets/samples/application/movie_poster/1_1_res.webp" width="200"></td>
-    <td style="word-wrap:break-word;word-break:break-all;" width="100px";>"The man is facing the camera and is smiling."</td>
-  </tr>
-</tbody>
-</table>
 
 ## ⚙️️ Installation
 Download the code using the following command:
@@ -537,7 +555,6 @@ python run_train.py  --cfg train_config/ace_plus_fft.yaml
 
 The models trained by ACE++ can be found in ./examples/exp_example/xxxx/checkpoints/xxxx/0_SwiftLoRA/comfyui_model.safetensors.
 
-
 ## 💻 Demo
 We have built a GUI demo based on Gradio to help users better utilize the ACE++ model. Just execute the following command.
 ```bash
@@ -555,6 +572,7 @@ export FLUX_FILL_PATH="hf://black-forest-labs/FLUX.1-Fill-dev"
 export ACE_PLUS_FFT_MODEL="ms://iic/ACE_Plus@ace_plus_fft.safetensors.safetensors"       
 python demo_fft.py
 ```
+
 
 ## 📚 Limitations
 * For certain tasks, such as deleting and adding objects, there are flaws in instruction following. For adding and replacing objects, we recommend trying the repainting method of the local editing model to achieve this.
